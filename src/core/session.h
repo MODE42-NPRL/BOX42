@@ -1,13 +1,15 @@
-#ifndef SESSION_H
-#define SESSION_H
+#pragma once
+#include <stdint.h>
 
-typedef struct {
+typedef struct Session {
     int fd;
     int proto;
     int use_up42;
+    int port;
+    uint8_t buf[2048];
+    int buflen;
 } Session;
 
-void session_init(Session *s, int fd, int proto);
-void session_handle(Session *s);
-
-#endif
+Session *session_create(int fd);
+void session_destroy(Session *s);
+void session_reset(Session *s);

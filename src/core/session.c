@@ -1,22 +1,26 @@
 #include "session.h"
-#include "up42.h"
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-void session_init(Session *s, int fd, int proto) {
+Session *session_create(int fd) {
+    Session *s = malloc(sizeof(Session));
+    if (!s) return NULL;
+    memset(s, 0, sizeof(Session));
     s->fd = fd;
-    s->proto = proto;
-    s->use_up42 = 0;
+    return s;
 }
 
-void session_handle(Session *s) {
-    uint8_t buf[2048];
-    ssize_t n = read(s->fd, buf, sizeof(buf));
-    if (n <= 0) return;
+void session_destroy(Session *s) {
+    if (!s) return;
+    if (s->fd >= 0) close(s->fd);
+    free(s);
+}
 
-    if (s->use_up42) {
-        UP42_Frame f;
-        if (up42_parse(buf, n, &f) == 0) {
-        }
-    } else {
-    }
+void session_reset(Session *s) {
+    if (!s) return;
+    s->proto = 0;
+    s->use_up42 = 0;
+    s->port = -1;
+    s->buflen = 0;
 }

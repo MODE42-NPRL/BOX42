@@ -1,6 +1,4 @@
-#ifndef LISTENER_H
-#define LISTENER_H
+#pragma once
 
-void start_listener(int port, int proto);
-
-#endif
+int listener_start(const char *host, int port);
+void listener_tick(void);
