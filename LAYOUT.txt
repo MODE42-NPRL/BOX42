@@ -1,8 +1,10 @@
 .
 ├── bin
+│   ├── BSDmakefile
+│   ├── build
+│   ├── CMakeLists.txt
+│   └── Makefile
 ├── build
-│   ├── dep
-│   ├── logs
 │   └── obj
 ├── data
 │   ├── logs
@@ -27,8 +29,7 @@
 │   │       └── arch_x86_64.c
 │   ├── build
 │   │   ├── BSDmakefile
-│   │   ├── CMakeLists.txt
-│   │   └── Makefile
+│   │   └── CMakeLists.txt
 │   ├── cmd
 │   ├── core
 │   │   ├── ax25.c
@@ -53,7 +54,13 @@
 │   │   ├── box.c
 │   │   ├── box.h
 │   │   ├── chat_action.c
+│   │   ├── chat_action.h
+│   │   ├── chat.c
+│   │   ├── chat_commands.c
+│   │   ├── chat_commands.h
+│   │   ├── chat.h
 │   │   ├── chat_parser.c
+│   │   ├── chat_parser.h
 │   │   ├── chat_private.c
 │   │   ├── chat_private.h
 │   │   ├── command.c
@@ -74,10 +81,20 @@
 │   │   ├── events.c
 │   │   ├── events.h
 │   │   ├── events_ids.h
+│   │   ├── focus.c
+│   │   ├── focus.h
+│   │   ├── help.c
+│   │   ├── help.h
 │   │   ├── kiss.c
 │   │   ├── kiss.h
 │   │   ├── listener.c
 │   │   ├── listener.h
+│   │   ├── login.c
+│   │   ├── login.h
+│   │   ├── mail.c
+│   │   ├── mail.h
+│   │   ├── mail_start.c
+│   │   ├── mail_start.h
 │   │   ├── main.c
 │   │   ├── main.h
 │   │   ├── mainloop.c
@@ -85,6 +102,8 @@
 │   │   ├── modules.h
 │   │   ├── news.c
 │   │   ├── news.h
+│   │   ├── node.c
+│   │   ├── node.h
 │   │   ├── nodes.c
 │   │   ├── nodes.h
 │   │   ├── perm.c
@@ -92,6 +111,14 @@
 │   │   ├── port_status.h
 │   │   ├── prompt.c
 │   │   ├── prompt.h
+│   │   ├── registration.c
+│   │   ├── registration.h
+│   │   ├── removeme.c
+│   │   ├── removeme.h
+│   │   ├── session_api.c
+│   │   ├── session_api.h
+│   │   ├── session.c
+│   │   ├── session.h
 │   │   ├── session_manager.c
 │   │   ├── session_manager.h
 │   │   ├── session_router.c
@@ -99,10 +126,16 @@
 │   │   ├── sqlite_news.c
 │   │   ├── ssh.c
 │   │   ├── ssh.h
+│   │   ├── sysinfo.c
+│   │   ├── sysinfo.h
 │   │   ├── system.c
+│   │   ├── system_command.c
+│   │   ├── system_command.h
 │   │   ├── system.h
 │   │   ├── telnet.c
 │   │   ├── telnet.h
+│   │   ├── term.c
+│   │   ├── term.h
 │   │   ├── terminal.c
 │   │   ├── terminal.h
 │   │   ├── textstore.c
@@ -125,6 +158,8 @@
 │   │   ├── up42.h
 │   │   ├── up42_integration.c
 │   │   ├── up42_integration.h
+│   │   ├── userdata.c
+│   │   ├── userdata.h
 │   │   ├── users.c
 │   │   └── users.h
 │   ├── crypto
