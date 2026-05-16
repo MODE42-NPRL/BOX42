@@ -1,6 +1,6 @@
 # BOX/42 – All‑In‑One Communication Server for Sections+
 
-BOX42 starts as modular communication system supporting Telnet, SSH, USB‑Serial, Modem/Hayes Packet‑Radio (TNCs/KISS/AX.25).  
+BOX42 starts as modular communication system supporting Telnet, SSH, USB‑Serial, Modem/Hayes Packet‑Radio (TNCs/KISS/AX.25).<br>
 The entire system runs from a single directory for maximum portabilit in/via pure-text and prompt.
 
 ## Features

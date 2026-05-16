@@ -1,133 +1,105 @@
-BOX42/
-│
-├── bin/
-│   ├── box42
-│   └── box42-node
-│
-├── build/
-│   ├── obj/
-│   ├── dep/
-│   └── logs/
-│
-├── src/
-│   ├── core/
-│   │   ├── main.c
-│   │   ├── event_loop.c
-│   │   ├── event_loop.h
-│   │   ├── config.c
-│   │   └── config.h
-│   │
-│   ├── net/
-│   │   ├── telnet/
-│   │   │   ├── telnet_server.c
-│   │   │   ├── telnet_server.h
-│   │   │   ├── telnet_neg.c
-│   │   │   └── telnet_neg.h
-│   │   │
-│   │   ├── ssh/
-│   │   │   ├── ssh_server.c
-│   │   │   ├── ssh_server.h
-│   │   │   └── ssh_keys/
-│   │   │       ├── host_rsa
-│   │   │       └── host_ed25519
-│   │   │
-│   │   ├── serial/
-│   │   │   ├── serial_io.c
-│   │   │   ├── serial_io.h
-│   │   │   ├── modem_hayes.c
-│   │   │   └── modem_hayes.h
-│   │   │
-│   │   ├── usb/
-│   │   │   ├── usb_serial.c
-│   │   │   ├── usb_serial.h
-│   │   │   ├── usb_detect.c
-│   │   │   ├── usb_detect.h
-│   │   │   └── drivers/
-│   │   │       ├── ftdi.c
-│   │   │       ├── ftdi.h
-│   │   │       ├── pl2303.c
-│   │   │       ├── pl2303.h
-│   │   │       ├── ch34x.c
-│   │   │       ├── ch34x.h
-│   │   │       ├── cp210x.c
-│   │   │       └── cp210x.h
-│   │   │
-│   │   └── packet/
-│   │       ├── tnc2c.c
-│   │       ├── tnc2c.h
-│   │       ├── kiss.c
-│   │       ├── kiss.h
-│   │       ├── ax25.c
-│   │       └── ax25.h
-│   │
-│   ├── session/
-│   │   ├── session.c
-│   │   ├── session.h
-│   │   ├── session_router.c
-│   │   └── session_router.h
-│   │
-│   ├── cmd/
-│   │   ├── cmd_core.c
-│   │   ├── cmd_core.h
-│   │   ├── cmd_chat.c
-│   │   ├── cmd_chat.h
-│   │   ├── cmd_mail.c
-│   │   ├── cmd_mail.h
-│   │   ├── cmd_user.c
-│   │   └── cmd_user.h
-│   │
-│   ├── subsystems/
-│   │   ├── users.c
-│   │   ├── users.h
-│   │   ├── mail.c
-│   │   ├── mail.h
-│   │   ├── chat.c
-│   │   ├── chat.h
-│   │   ├── node.c
-│   │   └── node.h
-│   │
-│   ├── storage/
-│   │   ├── sqlite.c
-│   │   ├── sqlite.h
-│   │   ├── db_users.sql
-│   │   ├── db_mail.sql
-│   │   ├── db_node.sql
-│   │   └── db_config.sql
-│   │
-│   ├── util/
-│   │   ├── logger.c
-│   │   ├── logger.h
-│   │   ├── log_backend_file.c
-│   │   ├── log_backend_file.h
-│   │   ├── log_backend_sqlite.c
-│   │   ├── log_backend_sqlite.h
-│   │   ├── log_backend_syslog.c
-│   │   ├── log_backend_syslog.h
-│   │   ├── buffer.c
-│   │   ├── buffer.h
-│   │   ├── str.c
-│   │   └── str.h
-│   │
-│   └── include/
-│       └── box42.h
-│
-├── etc/
-│   ├── box42.conf
-│   ├── logging.conf
-│   ├── sshd.conf
-│   ├── tnc2c.conf
-│   ├── modem.conf
-│   ├── usb.conf
-│   └── sqlite.conf
-│
-├── data/
-    ├── users.db
-    ├── mail.db
-    ├── node.db
-    ├── config.db
-    ├── logs/
-    │   ├── box42.log
-    │   ├── box42.log.1
-    │   └── …
-    └── mail/
-
+├── bin
+├── build
+│   ├── dep
+│   ├── logs
+│   └── obj
+├── data
+│   ├── logs
+│   └── mail
+├── etc
+├── LAYOUT.txt
+├── LICENSE.md
+├── README.md
+├── src
+│   ├── arch
+│   │   ├── arch.h
+│   │   ├── arm64
+│   │   │   └── arch_arm64.c
+│   │   ├── m68k
+│   │   │   └── arch_m68k.c
+│   │   ├── ppc64
+│   │   │   └── arch_ppc64.c
+│   │   ├── riscv
+│   │   │   └── arch_riscv.c
+│   │   └── x86_64
+│   │       └── arch_x86_64.c
+│   ├── cmd
+│   ├── core
+│   │   ├── banner.c
+│   │   ├── banner.h
+│   │   ├── bootstrap.c
+│   │   ├── bootstrap.h
+│   │   ├── command.c
+│   │   ├── command.h
+│   │   ├── commands.c
+│   │   ├── commands.h
+│   │   ├── config.c
+│   │   ├── config.h
+│   │   ├── encoding.c
+│   │   ├── encoding.h
+│   │   ├── event_loop.c
+│   │   ├── event_loop.h
+│   │   ├── main.c
+│   │   ├── mainloop.c
+│   │   ├── nodes.c
+│   │   ├── nodes.h
+│   │   ├── perm.c
+│   │   ├── prompt.c
+│   │   ├── prompt.h
+│   │   ├── session.h
+│   │   ├── system.c
+│   │   ├── system.h
+│   │   ├── terminal.c
+│   │   └── terminal.h
+│   ├── crypto
+│   │   ├── crypto.c
+│   │   ├── crypto.h
+│   │   └── tinysha.h
+│   ├── etc
+│   │   ├── BOX42.config
+│   │   └── box42.conf
+│   ├── include
+│   ├── net
+│   │   ├── packet
+│   │   ├── serial
+│   │   │   ├── modem_hayes.c
+│   │   │   ├── modem_hayes.h
+│   │   │   ├── serial_io.c
+│   │   │   └── serial_io.h
+│   │   ├── ssh
+│   │   │   ├── ssh_keys
+│   │   │   ├── ssh_server.c
+│   │   │   └── ssh_server.h
+│   │   ├── telnet
+│   │   │   ├── telnet_neg.c
+│   │   │   ├── telnet_neg.h
+│   │   │   ├── telnet_server.c
+│   │   │   └── telnet_server.h
+│   │   └── usb
+│   │       ├── drivers
+│   │       └── usb_serial.h
+│   ├── os
+│   │   ├── amiga
+│   │   │   └── os_amiga.c
+│   │   ├── bsd
+│   │   │   └── os_bsd.c
+│   │   ├── linux
+│   │   │   └── os_linux.c
+│   │   ├── macos
+│   │   │   └── os_macos.c
+│   │   ├── os.h
+│   │   └── windows
+│   │       └── os_win.c
+│   ├── session
+│   │   ├── session.c
+│   │   └── session.h
+│   ├── storage
+│   │   ├── sqlite_local.c
+│   │   ├── sqlite_remote.c
+│   │   ├── sqlite_schema.sql
+│   │   ├── storage.c
+│   │   ├── storage.h
+│   │   └── storage_sqlite.c
+│   ├── subsystems
+│   └── util
+└── tools
