@@ -1,3 +1,5 @@
+akb@R8Cdeb:~/Downloads/BOX42/github/BOX42$ tree .
+.
 ├── bin
 ├── build
 │   ├── dep
@@ -51,6 +53,10 @@
 │   │   ├── bootstrap.h
 │   │   ├── box.c
 │   │   ├── box.h
+│   │   ├── chat_action.c
+│   │   ├── chat_parser.c
+│   │   ├── chat_private.c
+│   │   ├── chat_private.h
 │   │   ├── command.c
 │   │   ├── command.h
 │   │   ├── commands.c
@@ -87,8 +93,6 @@
 │   │   ├── port_status.h
 │   │   ├── prompt.c
 │   │   ├── prompt.h
-│   │   ├── session.c
-│   │   ├── session.h
 │   │   ├── session_manager.c
 │   │   ├── session_manager.h
 │   │   ├── session_router.c
