@@ -1,4 +1,3 @@
-/* src/core/ax25_route.c */
 #include "ax25_route.h"
 #include "config.h"
 #include <string.h>

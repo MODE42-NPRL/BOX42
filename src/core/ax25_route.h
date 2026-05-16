@@ -1,4 +1,3 @@
-/* src/core/ax25_route.h */
 #pragma once
 #include "ax25.h"
 
