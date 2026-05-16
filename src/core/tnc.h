@@ -1,4 +1,5 @@
 #pragma once
+#include "session.h"
 
 int tnc_open(const char *dev, int baud);
 int tnc_read(int fd, unsigned char *buf, int maxlen);

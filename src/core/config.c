@@ -12,7 +12,7 @@ static void cfg_defaults(void) {
     g_cfg.tnc[0].enabled = 1;
     strncpy(g_cfg.tnc[0].device, "/dev/ttyUSB0", 63);
     g_cfg.tnc[0].baud = 1200;
-    g_cfg.tnc[0].type = 0; // TNC2C
+    g_cfg.tnc[0].type = 0;
 
     g_cfg.beacon[0].enabled = 1;
     g_cfg.beacon[0].interval = 600;
@@ -56,13 +56,11 @@ int config_load(const char *path) {
         char *key = line;
         char *val = eq + 1;
 
-        // Callsign
         if (!strcmp(key, "CALLSIGN")) {
             strncpy(g_cfg.callsign, val, 15);
             continue;
         }
 
-        // TNC
         if (!strncmp(key, "TNC", 3)) {
             int idx = key[3] - '0';
             if (idx >= 0 && idx < 4) {
@@ -78,7 +76,6 @@ int config_load(const char *path) {
             continue;
         }
 
-        // Beacon
         if (!strncmp(key, "BEACON", 6)) {
             int idx = key[6] - '0';
             if (idx >= 0 && idx < 4) {
@@ -94,7 +91,6 @@ int config_load(const char *path) {
             continue;
         }
 
-        // Digi
         if (!strncmp(key, "DIGI", 4)) {
             if (strstr(key, "_ENABLED")) {
                 int idx = key[4] - '0';
@@ -109,7 +105,6 @@ int config_load(const char *path) {
             continue;
         }
 
-        // Transport Forwarding
         if (!strncmp(key, "TF", 2)) {
             int idx = key[2] - '0';
             if (idx >= 0 && idx < 8) {
@@ -130,6 +125,4 @@ int config_load(const char *path) {
 }
 
 void config_apply(void) {
-    // Wird von coreloop_init() aufgerufen
-    // und setzt alle Module anhand g_cfg.
 }

@@ -1,15 +1,13 @@
-enum focus_mode {
-    FOCUS_IDLE = 0,
-    FOCUS_CHAT,
-    FOCUS_MAIL,
-    FOCUS_BOX,
-    FOCUS_SYSTEM
-};
+#ifndef SESSION_H
+#define SESSION_H
 
-struct session {
+typedef struct {
     int fd;
-    int level;
-    char username[64];
-    int in_chat;
-    enum focus_mode focus;
-};
+    int proto;
+    int use_up42;
+} Session;
+
+void session_init(Session *s, int fd, int proto);
+void session_handle(Session *s);
+
+#endif

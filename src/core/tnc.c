@@ -41,7 +41,6 @@ int tnc_open(const char *dev, int baud) {
 
     tcsetattr(fd, TCSANOW, &t);
 
-    // optional RS232-Power (TNC2C kann über V.24 versorgt werden)
     if (g_cfg.tnc_power_rtsdtr) {
         int flags;
         if (ioctl(fd, TIOCMGET, &flags) == 0) {
@@ -58,7 +57,7 @@ int tnc_read(int fd, unsigned char *buf, int maxlen) {
 }
 
 int tnc_write(int fd, const unsigned char *buf, int len) {
-    return write(fd, len ? fd : fd, len); // <- korrigieren wir gleich unten
+    return write(fd, buf, len);
 }
 
 void tnc_close(int fd) {

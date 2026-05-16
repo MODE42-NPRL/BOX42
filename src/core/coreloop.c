@@ -20,6 +20,23 @@ static void on_ax25_rx(void *data) {
     ax25_dispatch(f);
 }
 
+#include "config.h"
+#include "listener.h"
+
+void coreloop_init(void) {
+    config_apply();
+}
+
+void coreloop_run(void) {
+    int telnet = config_get_int("network", "telnet_port", 2323);
+    int ssh    = config_get_int("network", "ssh_port", 2222);
+    int ax25   = config_get_int("network", "ax25_tunnel_port", 2211);
+
+    start_listener(telnet, 1);
+    start_listener(ssh, 2);
+    start_listener(ax25, 3);
+}
+
 void coreloop_init(void) {
     events_init();
 
