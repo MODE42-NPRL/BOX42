@@ -1,19 +1,19 @@
+// src/os/os.h
 #ifndef BOX42_OS_H
 #define BOX42_OS_H
 
-typedef int box_fd;
+#include <stdint.h>
 
-/* Initialize OS backend */
-int os_init(void);
+struct box42_os_info {
+    const char *name;
+    const char *arch;
+    const char *version;
+};
 
-/* Serial / TTY open */
-box_fd os_serial_open(const char *path);
-
-/* Read / Write */
-int os_read(box_fd fd, void *buf, int len);
-int os_write(box_fd fd, const void *buf, int len);
-
-/* Close */
-int os_close(box_fd fd);
+void box42_os_init(void);
+void box42_os_info(struct box42_os_info *out);
+uint64_t box42_os_time_ms(void);
+const char *box42_os_config_path(void);
+const char *box42_os_data_path(void);
 
 #endif

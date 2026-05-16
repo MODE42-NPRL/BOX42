@@ -1,0 +1,15 @@
+CC?=cc
+CFLAGS+=-std=c99 -Wall -O2 \
+  -Isrc -Isrc/core -Isrc/arch -Isrc/net -Isrc/os -Isrc/session -Isrc/storage -Isrc/util
+ROOT=..
+SRC_CORE!=ls ${ROOT}/src/core/*.c
+SRC_SESS!=ls ${ROOT}/src/session/*.c
+SRC_TELNET!=ls ${ROOT}/src/net/telnet/*.c
+SRC_STORE!=ls ${ROOT}/src/storage/storage*.c
+SRC_OS!=ls ${ROOT}/src/os/os_*.c
+BINDIR=${ROOT}/bin
+OUT=${BINDIR}/box42
+
+all:
+    mkdir -p ${BINDIR}
+    ${CC} ${CFLAGS} ${SRC_CORE} ${SRC_SESS} ${SRC_TELNET} ${SRC_STORE} ${SRC_OS} -o ${OUT}

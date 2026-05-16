@@ -1,32 +1,43 @@
-#include "../../os.h"
-#include <proto/exec.h>
-#include <proto/dos.h>
+// src/os/amiga/os_amiga.c
+#include "../os.h"
+#include <stdio.h>
+#include <time.h>
 
-int os_init(void)
+/*
+   Dies ist eine portable Stub-Version.
+   Später wird sie durch echte AmigaOS 3.9 / 3.2 / AROS / MorphOS
+   Implementierungen ersetzt.
+*/
+
+void box42_os_init(void)
 {
-    return 0;
+    // später: AmigaOS-spezifische Initialisierung
 }
 
-box_fd os_serial_open(const char *path)
+void box42_os_info(struct box42_os_info *out)
 {
-    (void)path;
-    return -1;
+    if (!out) return;
+
+    out->name = "AmigaOS";
+    out->arch = "m68k";
+    out->version = "3.x stub";
 }
 
-int os_read(box_fd fd, void *buf, int len)
+uint64_t box42_os_time_ms(void)
 {
-    (void)fd; (void)buf; (void)len;
-    return 0;
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (uint64_t)ts.tv_sec * 1000ULL + ts.tv_nsec / 1000000ULL;
 }
 
-int os_write(box_fd fd, const void *buf, int len)
+const char *box42_os_config_path(void)
 {
-    (void)fd; (void)buf;
-    return len;
+    // später: PROGDIR:BOX42.config oder ENV:BOX42/
+    return "etc/";
 }
 
-int os_close(box_fd fd)
+const char *box42_os_data_path(void)
 {
-    (void)fd;
-    return 0;
+    // später: T: oder PROGDIR:data/
+    return "data/";
 }
