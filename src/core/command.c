@@ -1,13 +1,19 @@
 #include <string.h>
-#include <stdio.h>
 #include "command.h"
-#include "commands.h"
-#include "session.h"
 #include "chat.h"
-#include "mail.h"
-#include "nodes.h"
-#include "system.h"
-#include "term.h"
+
+#include "login.h"
+#include "registration.h"
+#include "userdata.h"
+#include "focus.h"
+#include "session_api.h"
+#include "removeme.h"
+#include "chat_commands.h"
+#include "mail_start.h"
+#include "node.h"
+#include "system_command.h"
+#include "sysinfo.h"
+#include "help.h"
 
 /* ---------------------------------------------------------
    Hilfsfunktion: prüft ob Zeile mit Command beginnt

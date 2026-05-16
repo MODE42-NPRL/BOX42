@@ -1,18 +1,25 @@
-#include "session.h"
-#include "chat_private.h"
-#include <string.h>
+#include "chat_action.h"
 #include <stdio.h>
 
-void chat_action(Session *s, const char *text) {
-    char out[512];
-    snprintf(out, sizeof(out), "* %s %s", s->username, text);
+/*
+ * Parst eine Chat-Action, z.B. "#me waves"
+ */
+chat_action chat_action_parse(const char *text)
+{
+    chat_action act;
+    act.type = CHAT_ACTION_EMOTE;
+    act.text = text;
+    return act;
+}
 
-    if (s->mode == MODE_PRIVATE) {
-        int peer = s->private_peer;
-        session_send_text(peer, out);
-        session_send_text(s->id, out);
+/*
+ * Führt eine Chat-Action aus.
+ * Aktuell nur Emotes: "* text"
+ */
+void chat_action_execute(const chat_action *act)
+{
+    if (!act || act->type == CHAT_ACTION_NONE || !act->text)
         return;
-    }
 
-    // In Channels handled elsewhere
+    printf("* %s\n", act->text);
 }

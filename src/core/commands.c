@@ -6,6 +6,7 @@
 #include "storage.h"
 #include "term.h"
 #include "system.h"
+#include "term.h"
 
 /* ---------------------------------------------------------
    Rollen:
@@ -18,7 +19,7 @@
 
 int command_is_allowed(int fd, const char *cmd)
 {
-    struct session *s = session_get(fd);
+    Session *s = session_get(fd);
     int lvl = s->level;
 
     /* Owner darf alles */

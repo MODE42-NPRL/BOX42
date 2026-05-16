@@ -1,4 +1,4 @@
-#include "../../arch.h"
+#include "arch.h"
 
 int arch_word_bits(void)
 {

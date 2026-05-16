@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "port_status.h"
 #include "events.h"
 #include "events_ids.h"

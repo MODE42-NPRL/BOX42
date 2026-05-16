@@ -1,15 +1,26 @@
-CC?=cc
-CFLAGS+=-std=c99 -Wall -O2 \
-  -Isrc -Isrc/core -Isrc/arch -Isrc/net -Isrc/os -Isrc/session -Isrc/storage -Isrc/util
-ROOT=..
-SRC_CORE!=ls ${ROOT}/src/core/*.c
-SRC_SESS!=ls ${ROOT}/src/session/*.c
-SRC_TELNET!=ls ${ROOT}/src/net/telnet/*.c
-SRC_STORE!=ls ${ROOT}/src/storage/storage*.c
-SRC_OS!=ls ${ROOT}/src/os/os_*.c
-BINDIR=${ROOT}/bin
-OUT=${BINDIR}/box42
+# BOX42 BSDmakefile
+# Minimalistisch, rekursiv, portabel
 
-all:
-    mkdir -p ${BINDIR}
-    ${CC} ${CFLAGS} ${SRC_CORE} ${SRC_SESS} ${SRC_TELNET} ${SRC_STORE} ${SRC_OS} -o ${OUT}
+CC      = cc
+CFLAGS  = -O2 -Wall -std=c11
+
+# Alle Source-Verzeichnisse
+SRCDIRS = ../core ../session ../util ../crypto ../net ../os ../storage ../cmd ../subsystems
+
+# Alle .c Dateien rekursiv sammeln
+SRCS != find ${SRCDIRS} -type f -name '*.c'
+OBJS = ${SRCS:.c=.o}
+
+# Default Target
+all: box42
+
+box42: ${OBJS}
+⟶ TAB ${CC} ${CFLAGS} -o box42 ${OBJS}
+
+clean:
+⟶ TAB rm -f ${OBJS} box42
+
+install:
+⟶ TAB install -m 755 box42 ../../bin/box42
+
+.PHONY: all clean install

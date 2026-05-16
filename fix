@@ -1,0 +1,55 @@
+#!/bin/sh
+
+echo "== BOX42 BUILD START =="
+
+# ---------------------------------------------------------
+# 1. CLEAN
+# ---------------------------------------------------------
+
+echo "-- Cleaning old build files --"
+
+# CMake build dir
+if [ -d build/obj ]; then
+    rm -rf build/obj/*
+fi
+
+# Makefile build dir
+if [ -f src/build/Makefile ]; then
+    (cd src/build && make clean >/dev/null 2>&1)
+fi
+
+echo "-- Clean done --"
+
+# ---------------------------------------------------------
+# 2. MAKEFILE BUILD
+# ---------------------------------------------------------
+
+if [ -f src/build/Makefile ]; then
+    echo "-- Building via Makefile --"
+    (cd src/build && make -j4)
+fi
+
+# ---------------------------------------------------------
+# 3. CMAKE BUILD
+# ---------------------------------------------------------
+
+if [ -f src/build/CMakeLists.txt ]; then
+    echo "-- Building via CMake --"
+    mkdir -p build/obj
+    cd build/obj
+    cmake ../../src/build
+    cmake --build . --parallel 4
+    cd ../..
+fi
+
+# ---------------------------------------------------------
+# 4. RESULT CHECK
+# ---------------------------------------------------------
+
+if [ -f build/obj/box42 ] || [ -f src/build/box42 ]; then
+    echo "== BOX42 BUILD SUCCESS =="
+else
+    echo "== WARNUNG: Kein Binary erzeugt =="
+fi
+
+echo "== BOX42 BUILD DONE =="

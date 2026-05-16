@@ -1,28 +1,31 @@
-cmake_minimum_required(VERSION 3.5)
-project(BOX42 C)
+cmake_minimum_required(VERSION 3.10)
+project(box42 C)
 
-set(CMAKE_C_STANDARD 99)
-
-set(BOX42_ROOT ${CMAKE_CURRENT_LIST_DIR}/..)
+set(CMAKE_C_STANDARD 11)
 
 include_directories(
-    ${BOX42_ROOT}/src
-    ${BOX42_ROOT}/src/core
-    ${BOX42_ROOT}/src/arch
-    ${BOX42_ROOT}/src/net
-    ${BOX42_ROOT}/src/os
-    ${BOX42_ROOT}/src/session
-    ${BOX42_ROOT}/src/storage
-    ${BOX42_ROOT}/src/util
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../core
+    ${CMAKE_CURRENT_SOURCE_DIR}/../session
+    ${CMAKE_CURRENT_SOURCE_DIR}/../util
+    ${CMAKE_CURRENT_SOURCE_DIR}/../crypto
+    ${CMAKE_CURRENT_SOURCE_DIR}/../net
+    ${CMAKE_CURRENT_SOURCE_DIR}/../os
+    ${CMAKE_CURRENT_SOURCE_DIR}/../storage
+    ${CMAKE_CURRENT_SOURCE_DIR}/../cmd
+    ${CMAKE_CURRENT_SOURCE_DIR}/../subsystems
 )
 
-file(GLOB CORE_SRC
-    "${BOX42_ROOT}/src/core/*.c"
-    "${BOX42_ROOT}/src/session/*.c"
-    "${BOX42_ROOT}/src/net/telnet/*.c"
-    "${BOX42_ROOT}/src/storage/storage*.c"
-    "${BOX42_ROOT}/src/os/os_*.c"
+file(GLOB_RECURSE BOX42_SOURCES
+    "../core/*.c"
+    "../session/*.c"
+    "../util/*.c"
+    "../crypto/*.c"
+    "../net/**/*.c"
+    "../os/**/*.c"
+    "../storage/*.c"
+    "../cmd/*.c"
+    "../subsystems/*.c"
 )
 
-add_executable(box42 ${CORE_SRC})
-set_target_properties(box42 PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${BOX42_ROOT}/bin")
+add_executable(box42 ${BOX42_SOURCES})

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "ax25_tunnel.h"
 #include "session.h"
 #include <unistd.h>

@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include "../../core/events.h"
-#include "../../core/ax25.h"
+#include "events.h"
+#include "ax25.h"
+#include <string.h>
 
 static int counter = 0;
 
