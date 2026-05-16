@@ -1,6 +1,3 @@
-#ifndef BOX42_BANNER_H
-#define BOX42_BANNER_H
+#pragma once
 
-void banner_show(int fd);
-
-#endif
+void banner_send(int fd);

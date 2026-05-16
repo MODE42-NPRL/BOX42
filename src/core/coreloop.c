@@ -1,29 +1,77 @@
 #include "coreloop.h"
-#include <stdio.h>
+#include "events.h"
+#include "tnc_mod.h"
+#include "beacon.h"
+#include "digipeater.h"
+#include "transport_forward.h"
+#include "events_ids.h"
+#include "ax25_dispatch.h"
+#include "ax25_monitor.h"
 
-void coreloop_init(CoreLoop *cl) {
-    cl->running = 1;
-    cl->module_count = 0;
+#include <unistd.h>
+#include "port_status.h"
+#include "ax25_sniffer.h"
+#include "textstore.h"
+
+static int running = 0;
+
+static void on_ax25_rx(void *data) {
+    AX25_Frame *f = (AX25_Frame *)data;
+    ax25_dispatch(f);
 }
 
-void coreloop_add_module(CoreLoop *cl, BOX42_Module m) {
-    if (cl->module_count < 16) {
-        cl->modules[cl->module_count++] = m;
-    } else {
-        printf("[BOX42] Too many modules\n");
+void coreloop_init(void) {
+    events_init();
+
+    event_register(EVT_AX25_RX, on_ax25_rx);
+    // Monitor optional
+    // ax25_monitor_init();
+    ax25_sniffer_init();
+
+    tnc_mod_init();
+    beacon_init();
+    digipeater_init();
+    transport_forward_init();
+
+    running = 1;
+}
+
+void coreloop_run(void) {
+    while (running) {
+        tnc_mod_tick();
+        beacon_tick();
+        usleep(100000); // 100 ms
     }
 }
 
-void coreloop_run(CoreLoop *cl) {
-    while (cl->running) {
-        for (int i = 0; i < cl->module_count; i++) {
-            if (cl->modules[i].tick)
-                cl->modules[i].tick();
+void coreloop_stop(void) {
+    running = 0;
+    tnc_mod_stop();
+}
+
+void coreloop_run(void) {
+    while (running) {
+        tnc_mod_tick();
+        beacon_tick();
+        port_status_tick();
+        usleep(100000); // 100 ms
+    }
+}
+
+tatic int tick_counter = 0;
+
+void coreloop_run(void) {
+    while (running) {
+        tnc_mod_tick();
+        beacon_tick();
+        port_status_tick();
+
+        tick_counter++;
+        if (tick_counter >= 50) { // alle 5 Sekunden
+            textstore_tick();
+            tick_counter = 0;
         }
-        // später: event_emit(EVENT_TICK, NULL);
-    }
-}
 
-void coreloop_stop(CoreLoop *cl) {
-    cl->running = 0;
+        usleep(100000);
+    }
 }

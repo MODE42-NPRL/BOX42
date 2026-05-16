@@ -1,27 +1,52 @@
 #include "events.h"
-#include <stdio.h>
 
-static EventSlot event_slots[MAX_EVENTS];
+#define MAX_EVENTS    32
+#define MAX_HANDLERS  4
 
-void event_register(int event_id, EventHandler handler) {
-    if (event_id < 0 || event_id >= MAX_EVENTS) return;
+typedef struct {
+    EventHandler handlers[MAX_HANDLERS];
+    int count;
+} EventSlot;
 
-    EventSlot *slot = &event_slots[event_id];
+static EventSlot slots[MAX_EVENTS];
 
-    if (slot->count >= MAX_HANDLERS_PER_EVENT) {
-        printf("[BOX42] Event %d handler overflow\n", event_id);
-        return;
+void events_init(void) {
+    for (int i = 0; i < MAX_EVENTS; i++) {
+        slots[i].count = 0;
+        for (int j = 0; j < MAX_HANDLERS; j++)
+            slots[i].handlers[j] = 0;
     }
-
-    slot->handlers[slot->count++] = handler;
 }
 
-void event_emit(int event_id, void *data) {
-    if (event_id < 0 || event_id >= MAX_EVENTS) return;
+int event_register(int id, EventHandler h) {
+    if (id < 0 || id >= MAX_EVENTS) 
+        return 0;
+    if (!h) 
+        return 0;
 
-    EventSlot *slot = &event_slots[event_id];
+    EventSlot *s = &slots[id];
 
-    for (int i = 0; i < slot->count; i++) {
-        slot->handlers[i](data);
+    if (s->count >= MAX_HANDLERS)
+        return 0;
+
+    s->handlers[s->count++] = h;
+    return 1;
+}
+
+int event_emit(int id, void *data) {
+    if (id < 0 || id >= MAX_EVENTS)
+        return 0;
+
+    EventSlot *s = &slots[id];
+    int called = 0;
+
+    for (int i = 0; i < s->count; i++) {
+        EventHandler h = s->handlers[i];
+        if (h) {
+            h(data);
+            called++;
+        }
     }
+
+    return called;
 }

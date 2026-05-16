@@ -1,0 +1,27 @@
+#include "ax25_monitor.h"
+#include "events.h"
+#include "events_ids.h"
+
+#include <stdio.h>
+#include <ctype.h>
+
+static void ax25_monitor_on_rx(void *data) {
+    AX25_Frame *f = (AX25_Frame *)data;
+    if (!f) return;
+
+    printf("[MON] p%d %s > %s len=%d : ",
+           f->port, f->src, f->dst, f->payload_len);
+
+    for (int i = 0; i < f->payload_len; i++) {
+        unsigned char c = f->payload[i];
+        if (isprint(c))
+            putchar(c);
+        else
+            putchar('.');
+    }
+    putchar('\n');
+}
+
+void ax25_monitor_init(void) {
+    event_register(EVT_AX25_RX, ax25_monitor_on_rx);
+}

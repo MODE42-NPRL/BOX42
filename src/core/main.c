@@ -1,7 +1,9 @@
-#include "encoding.h"
+// main.c
+#include "coreloop.h"
 
-int main(void)
-{
-    encoding_init();
-    return event_loop_run();
+int main(int argc, char **argv) {
+    coreloop_init();
+    coreloop_run();
+    coreloop_stop();
+    return 0;
 }
