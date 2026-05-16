@@ -1,41 +1,81 @@
+#include <string.h>
+#include <stdio.h>
 #include "command.h"
 #include "commands.h"
 #include "session.h"
-#include "focus.h"
 #include "chat.h"
-#include "box.h"
 #include "mail.h"
+#include "nodes.h"
 #include "system.h"
+#include "term.h"
 
-void command_dispatch(int fd, const char *line)
+/* ---------------------------------------------------------
+   Hilfsfunktion: prüft ob Zeile mit Command beginnt
+--------------------------------------------------------- */
+static int cmd_is(const char *cmd, const char *line)
 {
-    struct session *s = session_get(fd);
+    return strncmp(line, cmd, strlen(cmd)) == 0;
+}
 
-    /* Focus‑abhängige Eingaben ohne # */
-    if (line[0] != '#') {
-        switch (s->focus) {
-            case FOCUS_CHAT:   chat_say(fd, line); return;
-            case FOCUS_MAIL:   mail_input(fd, line); return;
-            case FOCUS_BOX:    box_input(fd, line); return;
-            case FOCUS_SYSTEM: system_input(fd, line); return;
-            default:
-                term_write(fd, "Not in a focus area. Use #focus <area>.\n");
-                return;
-        }
-    }
+/* ---------------------------------------------------------
+   Haupt-Parser
+--------------------------------------------------------- */
+int command_process(int fd, const char *line)
+{
+    /* sysinfo */
+    if (cmd_is("#sysinfo", line))
+        return sysinfo_dispatch(fd, line);
 
-    /* Commands */
-    if (cmd_is("#focus", line)) return cmd_focus(fd, line);
-    if (cmd_is("#login", line)) return cmd_login(fd, line);
-    if (cmd_is("#registration", line)) return cmd_registration(fd, line);
-    if (cmd_is("#userdata", line)) return cmd_userdata(fd, line);
-    if (cmd_is("#join", line)) return cmd_join(fd, line);
-    if (cmd_is("#leave", line)) return cmd_leave(fd, line);
-    if (cmd_is("#say", line)) return cmd_say(fd, line);
-    if (cmd_is("#who", line)) return cmd_who(fd, line);
-    if (cmd_is("#logoff", line)) return cmd_logoff(fd, line);
-    if (cmd_is("#exit", line)) return cmd_logoff(fd, line);
-    if (cmd_is("#removeme", line)) return cmd_removeme(fd, line);
+    /* help */
+    if (cmd_is("#help", line))
+        return cmd_help(fd, line);
 
-    term_write(fd, "Unknown command.\n");
+    /* login */
+    if (cmd_is("#login", line))
+        return login_process(fd, line);
+
+    /* registration */
+    if (cmd_is("#registration", line))
+        return registration_process(fd, line);
+
+    /* userdata */
+    if (cmd_is("#userdata", line))
+        return userdata_process(fd);
+
+    /* focus */
+    if (cmd_is("#focus", line))
+        return focus_process(fd, line);
+
+    /* logoff */
+    if (cmd_is("#logoff", line))
+        return session_logoff(fd);
+
+    /* exit */
+    if (cmd_is("#exit", line))
+        return session_exit(fd);
+
+    /* removeme */
+    if (cmd_is("#removeme", line))
+        return removeme_process(fd, line);
+
+    /* chat commands */
+    if (cmd_is("#join", line)) return chat_join(fd);
+    if (cmd_is("#leave", line)) return chat_leave(fd);
+    if (cmd_is("#say", line)) return chat_say(fd, line);
+    if (cmd_is("#who", line)) return chat_who(fd);
+
+    /* mail */
+    if (cmd_is("#mail", line))
+        return mail_start(fd, line);
+
+    /* node (owner only) */
+    if (cmd_is("node", line))
+        return node_command(fd, line);
+
+    /* system commands (owner+admin) */
+    if (cmd_is("system", line))
+        return system_command(fd, line);
+
+    /* fallback: focus engine */
+    return focus_input(fd, line);
 }

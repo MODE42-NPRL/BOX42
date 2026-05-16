@@ -2,164 +2,165 @@
 #include <stdio.h>
 #include "commands.h"
 #include "session.h"
-#include "chat.h"
-#include "focus.h"
+#include "nodes.h"
 #include "storage.h"
-#include "util.h"
 #include "term.h"
+#include "system.h"
 
 /* ---------------------------------------------------------
-   Helper
+   Rollen:
+   0 Owner
+   1 Admin
+   2 Mod
+   3 User
+   4 Guest
 --------------------------------------------------------- */
 
-int cmd_is(const char *cmd, const char *line)
-{
-    return strncmp(line, cmd, strlen(cmd)) == 0;
-}
-
-/* ---------------------------------------------------------
-   #login
---------------------------------------------------------- */
-
-int cmd_login(int fd, const char *line)
-{
-    char user[64], pass[128];
-
-    if (sscanf(line, "#login %63s %127s", user, pass) != 2)
-        return term_write(fd, "Usage: #login <user> <pass>\n");
-
-    str_tolower(user);
-
-    if (!storage_user_exists(user))
-        return term_write(fd, "Invalid login.\n");
-
-    if (!storage_user_auth(user, pass))
-        return term_write(fd, "Invalid login.\n");
-
-    int level = storage_user_level(user);
-
-    session_set_username(fd, user);
-    session_set_level(fd, level);
-
-    term_write(fd, "Login successful.\n");
-    return 0;
-}
-
-/* ---------------------------------------------------------
-   #registration
---------------------------------------------------------- */
-
-int cmd_registration(int fd, const char *line)
-{
-    char user[64], pass[128];
-
-    if (sscanf(line, "#registration %63s %127s", user, pass) != 2)
-        return term_write(fd, "Usage: #registration <user> <pass>\n");
-
-    str_tolower(user);
-
-    if (storage_user_exists(user))
-        return term_write(fd, "User already exists.\n");
-
-    if (!password_valid(pass))
-        return term_write(fd, "Password too weak.\n");
-
-    storage_user_add(user, pass, 1);
-
-    term_write(fd, "Registration complete.\n");
-    return 0;
-}
-
-/* ---------------------------------------------------------
-   #userdata
---------------------------------------------------------- */
-
-int cmd_userdata(int fd, const char *line)
+int command_is_allowed(int fd, const char *cmd)
 {
     struct session *s = session_get(fd);
+    int lvl = s->level;
 
-    if (s->level == 0) {
-        term_write(fd, "User: Guest\nLevel: 0\n");
+    /* Owner darf alles */
+    if (lvl == 0)
+        return 1;
+
+    /* Node commands nur Owner */
+    if (!strcmp(cmd, "node"))
         return 0;
+
+    /* System commands nur Owner+Admin */
+    if (!strcmp(cmd, "system"))
+        return (lvl <= 1);
+
+    /* Mail: Guests nicht */
+    if (!strcmp(cmd, "mail"))
+        return (lvl <= 3);
+
+    /* Removeme: Guests nicht */
+    if (!strcmp(cmd, "removeme"))
+        return (lvl <= 3);
+
+    /* Alles andere erlaubt */
+    return 1;
+}
+
+/* ---------------------------------------------------------
+   #help und #help <command>
+--------------------------------------------------------- */
+
+struct help_entry {
+    const char *cmd;
+    const char *shorttext;
+    const char *longtext;
+};
+
+static struct help_entry help_table[] = {
+
+    { "login", "Login to an account.",
+      "#login <username>\nLogs into an existing account." },
+
+    { "registration", "Create a new account.",
+      "#registration <username>\nCreates a new user account." },
+
+    { "focus", "Change active focus area.",
+      "#focus <chat|mail|box|system|idle>\nChanges the active focus area." },
+
+    { "mail", "Send a message.",
+      "#mail <user|admin|owner|mod>\nStarts composing a mail.\nEnd with a single dot." },
+
+    { "sysinfo", "System information.",
+      "#sysinfo\nBasic info.\n"
+      "#sysinfo help\nList subcommands.\n"
+      "#sysinfo stats\nSystem statistics.\n"
+      "#sysinfo users\nUser role counts.\n"
+      "#sysinfo nodes\nNode status summary.\n"
+      "#sysinfo mynode\nYour current node." },
+
+    { "node", "Owner-only node management.",
+      "node list\nnode <id>\nnode <id> up|down\nnode <id> name <text>" },
+
+    { "join", "Join chat.", "#join\nJoins the chat." },
+    { "leave", "Leave chat.", "#leave\nLeaves the chat." },
+    { "say", "Send chat message.", "#say <text>\nSends a chat message." },
+    { "who", "List active users.", "#who\nLists active users." },
+
+    { "logoff", "Log off.", "#logoff\nLogs off the current session." },
+    { "exit", "Exit session.", "#exit\nCloses the connection." },
+
+    { "removeme", "Delete your account.",
+      "#removeme true\nDeletes your account permanently." },
+
+    { NULL, NULL, NULL }
+};
+
+static int help_short(int fd)
+{
+    term_write(fd, "Available commands:\n");
+
+    struct session *s = session_get(fd);
+
+    for (int i = 0; help_table[i].cmd; i++) {
+        if (!command_is_allowed(fd, help_table[i].cmd))
+            continue;
+
+        char buf[128];
+        snprintf(buf, sizeof(buf), "#%s - %s\n",
+                 help_table[i].cmd,
+                 help_table[i].shorttext);
+        term_write(fd, buf);
     }
 
-    char buf[256];
-    snprintf(buf, sizeof(buf), "User: %s\nLevel: %d\nPassword: ********\n",
-             s->username, s->level);
-
-    term_write(fd, buf);
     return 0;
+}
+
+static int help_long(int fd, const char *cmd)
+{
+    for (int i = 0; help_table[i].cmd; i++) {
+        if (!strcmp(help_table[i].cmd, cmd)) {
+
+            if (!command_is_allowed(fd, cmd)) {
+                term_write(fd, "Access denied.\n");
+                return 0;
+            }
+
+            term_write(fd, help_table[i].longtext);
+            term_write(fd, "\n");
+            return 0;
+        }
+    }
+
+    term_write(fd, "No help for this command.\n");
+    return 0;
+}
+
+int cmd_help(int fd, const char *line)
+{
+    char cmd[32];
+
+    if (sscanf(line, "#help %31s", cmd) == 1)
+        return help_long(fd, cmd);
+
+    return help_short(fd);
 }
 
 /* ---------------------------------------------------------
-   #focus
+   #sysinfo dispatcher
 --------------------------------------------------------- */
 
-int cmd_focus(int fd, const char *line)
+int sysinfo_dispatch(int fd, const char *line)
 {
-    return focus_handle(fd, line);
-}
+    char sub[32];
 
-/* ---------------------------------------------------------
-   Chat Commands
---------------------------------------------------------- */
+    if (sscanf(line, "#sysinfo %31s", sub) != 1)
+        return sysinfo_basic(fd);
 
-int cmd_join(int fd, const char *line)
-{
-    chat_join(fd);
-    return 0;
-}
+    if (!strcmp(sub, "help"))   return sysinfo_help(fd);
+    if (!strcmp(sub, "stats"))  return sysinfo_stats(fd);
+    if (!strcmp(sub, "users"))  return sysinfo_users(fd);
+    if (!strcmp(sub, "nodes"))  return sysinfo_nodes(fd);
+    if (!strcmp(sub, "mynode")) return sysinfo_mynode(fd);
 
-int cmd_leave(int fd, const char *line)
-{
-    chat_leave(fd);
-    return 0;
-}
-
-int cmd_say(int fd, const char *line)
-{
-    const char *msg = line + 5; /* skip "#say " */
-    chat_say(fd, msg);
-    return 0;
-}
-
-int cmd_who(int fd, const char *line)
-{
-    chat_userlist(fd);
-    return 0;
-}
-
-/* ---------------------------------------------------------
-   #logoff / #exit
---------------------------------------------------------- */
-
-int cmd_logoff(int fd, const char *line)
-{
-    chat_leave(fd);
-    session_destroy(fd);
-    term_write(fd, "Goodbye.\n");
-    os_close(fd);
-    return 0;
-}
-
-/* ---------------------------------------------------------
-   #removeme true
---------------------------------------------------------- */
-
-int cmd_removeme(int fd, const char *line)
-{
-    if (strcmp(line, "#removeme true") != 0)
-        return term_write(fd, "Confirmation required: #removeme true\n");
-
-    struct session *s = session_get(fd);
-
-    if (s->level == 0)
-        return term_write(fd, "Guests cannot be removed.\n");
-
-    storage_user_delete(s->username);
-
-    term_write(fd, "Your account has been removed.\n");
-    session_destroy(fd);
-    os_close(fd);
+    term_write(fd, "Unknown sysinfo command.\n");
     return 0;
 }
