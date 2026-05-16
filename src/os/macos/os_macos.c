@@ -1,6 +1,6 @@
 #include "../../os.h"
-#include <proto/exec.h>
-#include <proto/dos.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 int os_init(void)
 {
@@ -9,24 +9,20 @@ int os_init(void)
 
 box_fd os_serial_open(const char *path)
 {
-    (void)path;
-    return -1;
+    return open(path, O_RDWR | O_NOCTTY);
 }
 
 int os_read(box_fd fd, void *buf, int len)
 {
-    (void)fd; (void)buf; (void)len;
-    return 0;
+    return read(fd, buf, len);
 }
 
 int os_write(box_fd fd, const void *buf, int len)
 {
-    (void)fd; (void)buf;
-    return len;
+    return write(fd, buf, len);
 }
 
 int os_close(box_fd fd)
 {
-    (void)fd;
-    return 0;
+    return close(fd);
 }

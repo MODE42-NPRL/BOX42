@@ -1,6 +1,5 @@
 #include "../../os.h"
-#include <proto/exec.h>
-#include <proto/dos.h>
+#include <windows.h>
 
 int os_init(void)
 {
