@@ -1,13 +1,14 @@
-# BOX/42 – All‑In‑One Communication Server for Sections+
+# BOX/42 — Hybrid Traffic Server and pure extensible line-based Mailbox/BBS-alike
 
-BOX42 starts as modular communication system supporting Telnet, SSH, USB‑Serial, Modem/Hayes Packet‑Radio (TNCs/KISS/AX.25).<br>
-The entire system runs from a single directory for maximum portabilit in/via pure-text and prompt.
+BOX/42 is a fully modernized, non‑violent re‑implementation of a classic multi‑protocol communication system.  
+It is designed for clarity, stability, and long‑term maintainability — without legacy baggage, without chaos, without unsafe defaults.
 
-## Features
-- Multi‑access: Telnet, SSH, USB, Serial, AX.25
-- Unified session router
-- Modular command engine
-- SQLite storage (users, mail, node, config)
-- File and SQLite logging
-- Fully self‑contained directory layout
-- SQLite database storage local/remote
+At the core of BOX/42 lives the **HSTB42 Hybrid Stack** (hystack), a hardened, raw‑TCP engine that processes all traffic full‑duplex, parallel and asynchronous.
+
+---
+
+## Key Principles
+
+- **Non‑violent by design**  
+  No harmful features, no aggressive networking, no exploit‑prone modules.  
+  BOX/42 is built for peaceful communication and transparent operation.
