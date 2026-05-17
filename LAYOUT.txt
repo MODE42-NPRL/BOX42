@@ -1,27 +1,41 @@
 .
 ├── bin
+│   ├── BOX42
+│   ├── BOX42.db
+│   ├── BOX42.vcxproj
 │   ├── BSDmakefile
-│   ├── build
 │   ├── CMakeLists.txt
+│   ├── data
+│   │   └── users.db
+│   ├── etc
+│   │   ├── banner.txt
+│   │   ├── BOX42.config
+│   │   ├── commands.txt
+│   │   ├── motd.txt
+│   │   └── news.txt
 │   └── Makefile
 ├── data
 │   ├── logs
 │   └── mail
 ├── etc
 ├── EXAMPLE.txt
-├── fix
 ├── HYSTACK.txt
 ├── LAYOUT.txt
 ├── LICENSE.md
 ├── README.md
 ├── src
 │   ├── core
+│   │   ├── ax25.c
+│   │   ├── ax25_drv.c
+│   │   ├── ax25_drv.h
 │   │   ├── ax25.h
 │   │   ├── ax25_route.h
 │   │   ├── box42.c
 │   │   ├── box42.h
 │   │   ├── box42_init.c
 │   │   ├── box42_init.h
+│   │   ├── box42_os.c
+│   │   ├── box42_os.h
 │   │   ├── box42_strds.c
 │   │   ├── box42_strds.h
 │   │   ├── config.c
@@ -36,187 +50,18 @@
 │   │   ├── session.h
 │   │   ├── sha256.c
 │   │   ├── sha256.h
+│   │   ├── sqlite_schema-config.sql
+│   │   ├── sqlite_schema-files.sql
+│   │   ├── sqlite_schema-mail.sql
+│   │   ├── sqlite_schema-users.sql
 │   │   └── tnc_layer.h
+│   ├── etc
+│   │   ├── banner.txt
+│   │   ├── BOX42.config
+│   │   ├── commands.txt
+│   │   ├── motd.txt
+│   │   └── news.txt
 │   └── old
-│       ├── arch
-│       │   ├── arch.h
-│       │   ├── arm64
-│       │   │   └── arch_arm64.c
-│       │   ├── m68k
-│       │   │   └── arch_m68k.c
-│       │   ├── ppc64
-│       │   │   └── arch_ppc64.c
-│       │   ├── riscv
-│       │   │   └── arch_riscv.c
-│       │   └── x86_64
-│       │       └── arch_x86_64.c
-│       ├── ax25.c
-│       ├── ax25_dispatch.c
-│       ├── ax25_dispatch.h
-│       ├── ax25_mod.c
-│       ├── ax25_monitor.c#
-│       ├── ax25_monitor.h
-│       ├── ax25_route.c
-│       ├── ax25_sniffer.c
-│       ├── ax25_sniffer.h
-│       ├── ax25_tunnel.c
-│       ├── ax25_tunnel.h
-│       ├── banner.c
-│       ├── banner.h
-│       ├── beacon.c
-│       ├── beacon.h
-│       ├── bootstrap.c
-│       ├── bootstrap.h
-│       ├── box.c
-│       ├── box.h
-│       ├── chat_action.c
-│       ├── chat_action.h
-│       ├── chat.c
-│       ├── chat_commands.c
-│       ├── chat_commands.h
-│       ├── chat.h
-│       ├── chat_parser.c
-│       ├── chat_parser.h
-│       ├── chat_private.c
-│       ├── chat_private.h
-│       ├── cmd
-│       ├── command.c
-│       ├── command.h
-│       ├── commands.c
-│       ├── commands.h
-│       ├── coreloop.c
-│       ├── coreloop.h
-│       ├── crypto
-│       │   ├── crypto.c
-│       │   ├── crypto.h
-│       │   └── tinysha.h
-│       ├── digipeater.c
-│       ├── digipeater.h
-│       ├── encoding.c
-│       ├── encoding.h
-│       ├── etc
-│       │   ├── banner.txt
-│       │   ├── BOX42.config
-│       │   ├── commands.txt
-│       │   └── news.txt
-│       ├── event_loop.c
-│       ├── event_loop.h
-│       ├── events.c
-│       ├── events.h
-│       ├── events_ids.h
-│       ├── focus.c
-│       ├── focus.h
-│       ├── help.c
-│       ├── help.h
-│       ├── kiss.c
-│       ├── kiss.h
-│       ├── listener.c
-│       ├── listener.h
-│       ├── login.c
-│       ├── login.h
-│       ├── mail_start.c
-│       ├── mail_start.h
-│       ├── modules.c
-│       ├── modules.h
-│       ├── net
-│       │   ├── packet
-│       │   ├── serial
-│       │   │   ├── modem_hayes.c
-│       │   │   ├── modem_hayes.h
-│       │   │   ├── serial_io.c
-│       │   │   └── serial_io.h
-│       │   ├── ssh
-│       │   │   ├── ssh_keys
-│       │   │   ├── ssh_server.c
-│       │   │   └── ssh_server.h
-│       │   ├── telnet
-│       │   │   ├── telnet_neg.c
-│       │   │   ├── telnet_neg.h
-│       │   │   ├── telnet_server.c
-│       │   │   └── telnet_server.h
-│       │   └── usb
-│       │       ├── drivers
-│       │       └── usb_serial.h
-│       ├── news.c
-│       ├── news.h
-│       ├── node.c
-│       ├── node.h
-│       ├── nodes.c
-│       ├── nodes.h
-│       ├── os
-│       │   ├── amiga
-│       │   │   └── os_amiga.c
-│       │   ├── bsd
-│       │   │   └── os_bsd.c
-│       │   ├── linux
-│       │   │   └── os_linux.c
-│       │   ├── macos
-│       │   │   └── os_macos.c
-│       │   ├── os.h
-│       │   └── windows
-│       │       └── os_win.c
-│       ├── perm.c
-│       ├── port_status.c
-│       ├── port_status.h
-│       ├── prompt.c
-│       ├── prompt.h
-│       ├── registration.c
-│       ├── registration.h
-│       ├── removeme.c
-│       ├── removeme.h
-│       ├── session_api.c
-│       ├── session_api.h
-│       ├── session_manager.c
-│       ├── session_manager.h
-│       ├── session_router.c
-│       ├── session_router.h
-│       ├── sqlite_news.c
-│       ├── ssh.c
-│       ├── ssh.h
-│       ├── storage
-│       │   ├── sqlite_local.c
-│       │   ├── sqlite_remote.c
-│       │   ├── sqlite_schema.sql
-│       │   ├── storage.c
-│       │   ├── storage.h
-│       │   └── storage_sqlite.c
-│       ├── subsystems
-│       ├── sysinfo.c
-│       ├── sysinfo.h
-│       ├── system.c
-│       ├── system_command.c
-│       ├── system_command.h
-│       ├── system.h
-│       ├── telnet.c
-│       ├── telnet.h
-│       ├── term.c
-│       ├── term.h
-│       ├── terminal.c
-│       ├── terminal.h
-│       ├── textstore.c
-│       ├── textstore.h
-│       ├── tnc2.c
-│       ├── tnc.c
-│       ├── tnc.h
-│       ├── tnc_kiss.c
-│       ├── tnc_kiss.h
-│       ├── tnc_layer.c
-│       ├── tnc_mod.c
-│       ├── tnc_mod.h
-│       ├── tnc_types.h
-│       ├── transport_forward.c
-│       ├── transport_forward.h
-│       ├── tunnel.c
-│       ├── tunnel.h
-│       ├── up42.c
-│       ├── up42.h
-│       ├── up42_integration.c
-│       ├── up42_integration.h
-│       ├── userdata.c
-│       ├── userdata.h
-│       ├── users.c
-│       ├── users.h
-│       └── util
 └── tools
 
-37 directories, 183 files
+13 directories, 52 files
