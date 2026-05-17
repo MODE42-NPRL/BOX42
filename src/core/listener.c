@@ -1,54 +1,86 @@
 #include "listener.h"
 #include "session.h"
-#include "session_manager.h"
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
-static int g_listen_fd = -1;
+static int listen_fd = -1;
 
-int listener_start(const char *host, int port) {
-    g_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (g_listen_fd < 0) return -1;
+static void set_nonblock(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
 
-    int opt = 1;
-    setsockopt(g_listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+int listener_fd(void)
+{
+    return listen_fd;
+}
 
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(host);
+int listener_init(const char *host, int port)
+{
+    struct sockaddr_in6 addr6;
 
-    if (bind(g_listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+    listen_fd = socket(AF_INET6, SOCK_STREAM, 0);
+    if (listen_fd < 0) {
+        perror("socket(AF_INET6)");
         return -1;
+    }
 
-    if (listen(g_listen_fd, 16) < 0)
+    int no = 0;
+
+    /* Dual-Stack aktivieren: IPv4 + IPv6 */
+    if (setsockopt(listen_fd, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no)) < 0) {
+        perror("setsockopt(IPV6_V6ONLY)");
         return -1;
+    }
 
-    fcntl(g_listen_fd, F_SETFL, O_NONBLOCK);
+    int yes = 1;
+    setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
+    memset(&addr6, 0, sizeof(addr6));
+    addr6.sin6_family = AF_INET6;
+    addr6.sin6_port = htons(port);
+
+    if (inet_pton(AF_INET6, host, &addr6.sin6_addr) <= 0) {
+        perror("inet_pton");
+        return -1;
+    }
+
+    if (bind(listen_fd, (struct sockaddr *)&addr6, sizeof(addr6)) < 0) {
+        perror("bind");
+        return -1;
+    }
+
+    if (listen(listen_fd, 16) < 0) {
+        perror("listen");
+        return -1;
+    }
+
+    set_nonblock(listen_fd);
+
+    printf("[LISTENER] Dual-Stack listening on [%s]:%d\n", host, port);
     return 0;
 }
 
-void listener_tick(void) {
-    if (g_listen_fd < 0) return;
+void listener_accept(void)
+{
+    struct sockaddr_in6 addr;
+    socklen_t len = sizeof(addr);
 
-    struct sockaddr_in cli;
-    socklen_t clilen = sizeof(cli);
-
-    int fd = accept(g_listen_fd, (struct sockaddr *)&cli, &clilen);
-    if (fd < 0) return;
-
-    fcntl(fd, F_SETFL, O_NONBLOCK);
-
-    Session *s = session_create(fd);
-    if (!s) {
-        close(fd);
+    int fd = accept(listen_fd, (struct sockaddr *)&addr, &len);
+    if (fd < 0)
         return;
-    }
 
-    session_manager_add(s);
+    set_nonblock(fd);
+
+    /* Session erzeugen */
+    session_create(fd, "", 0);
+
+    printf("[LISTENER] new connection fd=%d\n", fd);
 }

@@ -1,13 +1,12 @@
 #include "coreloop.h"
-#include <stdio.h>
-#include <stdatomic.h>
-#include <unistd.h>
+#include "listener.h"
+#include "session.h"
+#include "commands.h"
 
-/*
- * Minimal core loop for the modern BOX42 build.
- * All legacy subsystems (events, digipeater, tnc_mod, monitor, sniffer,
- * port_status, textstore, listener, config) are intentionally removed.
- */
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/select.h>
+#include <stdatomic.h>
 
 static atomic_int running = 0;
 
@@ -19,12 +18,48 @@ void coreloop_init(void)
 
 void coreloop_run(void)
 {
-    printf("[CORE] run loop (minimal)\n");
+    printf("[CORE] run loop\n");
 
     while (running) {
-        /* Placeholder for future polling */
-        usleep(100000); /* 100 ms */
-        break;          /* prevent infinite loop in minimal build */
+
+        fd_set rfds;
+        FD_ZERO(&rfds);
+
+        int lfd = listener_fd();
+        int maxfd = lfd;
+
+        /* Listener-FD überwachen */
+        FD_SET(lfd, &rfds);
+
+        /* Sessions eintragen */
+        for (int i = 0; i < MAX_SESSIONS; i++) {
+            Session *s = session_get_by_index(i);
+            if (!s) continue;
+
+            FD_SET(s->fd, &rfds);
+            if (s->fd > maxfd)
+                maxfd = s->fd;
+        }
+
+        /* Blockierendes Warten */
+        int r = select(maxfd + 1, &rfds, NULL, NULL, NULL);
+        if (r <= 0)
+            continue;
+
+        /* Neue Verbindung? */
+        if (FD_ISSET(lfd, &rfds)) {
+            listener_accept();
+        }
+
+        /* Sessions verarbeiten */
+        for (int i = 0; i < MAX_SESSIONS; i++) {
+            Session *s = session_get_by_index(i);
+            if (!s) continue;
+
+            if (FD_ISSET(s->fd, &rfds)) {
+                commands_process(s);
+            }
+        }
     }
 }
 

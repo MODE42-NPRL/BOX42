@@ -1,0 +1,15 @@
+// ------------------------------------------------------------
+// hstb42 - Hybrid Stack
+// Full Hybrid Traffic Server for BOX/42
+// ------------------------------------------------------------
+// The HSTB42 operates full‑duplex, parallel and asynchronous.
+// All internal processing inside BOX/42 is performed strictly
+// through TCP/IP (IPv4/IPv6, TCP/UDP). Every external signal,
+// protocol or modem (AX.25, KISS, TNC, Internet, Packet Radio)
+// is internally converted, masked and transported as TCP/IP.
+// After internal processing, the traffic is restored back into
+// its original protocol and returned to the respective hardware
+// or software endpoint. 100% compatibility is guaranteed for
+// the entire BOX/42 operation.
+// ------------------------------------------------------------
+

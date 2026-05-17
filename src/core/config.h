@@ -5,9 +5,9 @@
 
 #define CFG_MAX_LINE 512
 
-// -------------------------------
-// TNC-Konfiguration
-// -------------------------------
+/* -------------------------------
+   TNC-Konfiguration
+-------------------------------- */
 typedef struct {
     int enabled;
     char device[128];
@@ -15,9 +15,9 @@ typedef struct {
     int type;
 } TNC_Config;
 
-// -------------------------------
-// Beacon-Konfiguration
-// -------------------------------
+/* -------------------------------
+   Beacon-Konfiguration
+-------------------------------- */
 typedef struct {
     int enabled;
     int interval;
@@ -25,17 +25,17 @@ typedef struct {
     char text[256];
 } Beacon_Config;
 
-// -------------------------------
-// Digi-Konfiguration
-// -------------------------------
+/* -------------------------------
+   Digi-Konfiguration
+-------------------------------- */
 typedef struct {
     int enabled[4];
     int cross[4][4];
 } DIGI_Config;
 
-// -------------------------------
-// Transport-Forwarding (TF)
-// -------------------------------
+/* -------------------------------
+   Transport-Forwarding (TF)
+-------------------------------- */
 typedef struct {
     int used;
     int in_port;
@@ -43,9 +43,9 @@ typedef struct {
     char dst[16];
 } TF_Entry;
 
-// -------------------------------
-// Haupt-Konfigurationsstruktur
-// -------------------------------
+/* -------------------------------
+   Haupt-Konfigurationsstruktur
+-------------------------------- */
 typedef struct {
     char callsign[16];
 
@@ -56,7 +56,13 @@ typedef struct {
 
 } BOX42_Config;
 
+/* Globale Konfiguration */
 extern BOX42_Config g_cfg;
 
-#endif
+/* -------------------------------
+   Funktionsdeklarationen
+-------------------------------- */
+int config_load(const char *path);
+void config_apply(void);
 
+#endif

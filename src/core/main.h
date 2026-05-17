@@ -1,7 +1,6 @@
-// src/core/main.h
-#ifndef BOX42_MAIN_H
-#define BOX42_MAIN_H
+#ifndef MAIN_H
+#define MAIN_H
 
-int main(int argc, char **argv);
+#include "hystack.h"
 
 #endif

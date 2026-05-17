@@ -1,17 +1,23 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-/* Basis-Session-Typ für BOX42 */
+#include <stddef.h>
+
+#define MAX_SESSIONS 128
 
 typedef struct Session {
-    int  fd;
-    char username[64];
-    int  level;
-
-    int use_up42;   /* 0 = normal, 1 = UP4.2 tunneling enabled */
+    int fd;
+    char username[32];
+    int level;
+    int use_up42;
 } Session;
 
-/* Liefert die Session zu einem fd (oder NULL, wenn keine existiert) */
+/* API aus session.c */
 Session *session_get(int fd);
+Session *session_create(int fd, const char *username, int level);
+void session_destroy(int fd);
+
+/* Iterator für coreloop */
+Session *session_get_by_index(int idx);
 
 #endif

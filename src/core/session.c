@@ -1,12 +1,11 @@
 #include "session.h"
 #include <string.h>
 #include <stdio.h>
-
-#define MAX_SESSIONS 128
+#include <stddef.h>
 
 static Session sessions[MAX_SESSIONS];
 
-/* Initialisiert alle Sessions beim Start */
+/* interne Initialisierung */
 static void session_init(void)
 {
     static int initialized = 0;
@@ -16,11 +15,12 @@ static void session_init(void)
     for (int i = 0; i < MAX_SESSIONS; i++) {
         sessions[i].fd = -1;
         sessions[i].username[0] = '\0';
-        sessions[i].level = 0; /* guest */
+        sessions[i].level = 0;
+        sessions[i].use_up42 = 0;
     }
 }
 
-/* Liefert die Session zu einem fd */
+/* Session anhand FD holen */
 Session *session_get(int fd)
 {
     session_init();
@@ -32,7 +32,7 @@ Session *session_get(int fd)
     return NULL;
 }
 
-/* Erstellt eine neue Session */
+/* Neue Session anlegen */
 Session *session_create(int fd, const char *username, int level)
 {
     session_init();
@@ -43,14 +43,15 @@ Session *session_create(int fd, const char *username, int level)
             strncpy(sessions[i].username, username, sizeof(sessions[i].username)-1);
             sessions[i].username[sizeof(sessions[i].username)-1] = '\0';
             sessions[i].level = level;
+            sessions[i].use_up42 = 0;
             return &sessions[i];
         }
     }
 
-    return NULL; /* kein Platz */
+    return NULL;
 }
 
-/* Entfernt eine Session */
+/* Session löschen */
 void session_destroy(int fd)
 {
     session_init();
@@ -60,7 +61,22 @@ void session_destroy(int fd)
             sessions[i].fd = -1;
             sessions[i].username[0] = '\0';
             sessions[i].level = 0;
+            sessions[i].use_up42 = 0;
             return;
         }
     }
+}
+
+/* Iterator für coreloop */
+Session *session_get_by_index(int idx)
+{
+    session_init();
+
+    if (idx < 0 || idx >= MAX_SESSIONS)
+        return NULL;
+
+    if (sessions[idx].fd == -1)
+        return NULL;
+
+    return &sessions[idx];
 }
