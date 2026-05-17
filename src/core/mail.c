@@ -8,58 +8,41 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* global config */
+extern BOX42_Config g_cfg;
+
 /* ------------------------------------------------------------
    SQLite handle
 ------------------------------------------------------------ */
 static sqlite3 *mail_db = NULL;
 
 /* ------------------------------------------------------------
-   Timestamp formatting (24h or AM/PM)
+   Timestamp formatting (always 24h, no AM/PM)
 ------------------------------------------------------------ */
-static void format_timestamp(int ts, char *out, size_t outsz, int ampm)
+static void format_timestamp(int ts, char *out, size_t outsz)
 {
     time_t t = ts;
     struct tm *tm = localtime(&t);
 
-    if (!ampm) {
-        /* 24h format */
-        snprintf(out, outsz, "%04d-%02d-%02d %02d:%02d",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min
-        );
-    } else {
-        /* AM/PM format */
-        int hour = tm->tm_hour;
-        const char *suffix = "AM";
-
-        if (hour == 0) {
-            hour = 12;
-            suffix = "AM";
-        } else if (hour == 12) {
-            suffix = "PM";
-        } else if (hour > 12) {
-            hour -= 12;
-            suffix = "PM";
-        }
-
-        snprintf(out, outsz, "%04d-%02d-%02d %02d:%02d %s",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            hour,
-            tm->tm_min,
-            suffix
-        );
+    if (!tm) {
+        snprintf(out, outsz, "1970-01-01 00:00");
+        return;
     }
+
+    snprintf(out, outsz, "%04d-%02d-%02d %02d:%02d",
+        tm->tm_year + 1900,
+        tm->tm_mon + 1,
+        tm->tm_mday,
+        tm->tm_hour,
+        tm->tm_min
+    );
 }
 
 /* ------------------------------------------------------------
    Initialize SQLite mail database
 ------------------------------------------------------------ */
-int mail_init(const char *db_path) {
+int mail_init(const char *db_path)
+{
     if (sqlite3_open(db_path, &mail_db) != SQLITE_OK)
         return -1;
 
@@ -76,7 +59,12 @@ int mail_init(const char *db_path) {
 
     char *err = NULL;
     if (sqlite3_exec(mail_db, sql, NULL, NULL, &err) != SQLITE_OK) {
-        sqlite3_free(err);
+        if (err) {
+            fprintf(stderr, "mail_init SQL error: %s\n", err);
+            sqlite3_free(err);
+        }
+        sqlite3_close(mail_db);
+        mail_db = NULL;
         return -2;
     }
 
@@ -91,19 +79,22 @@ int mail_send(const char *sender,
               const char *subject,
               const char *body)
 {
+    if (!mail_db)
+        return -3;
+
     const char *sql =
         "INSERT INTO mail (sender, receiver, timestamp, subject, body)"
         " VALUES (?, ?, ?, ?, ?);";
 
     sqlite3_stmt *st;
-    if (sqlite3_prepare_v2(mail_db, sql, - -1, &st, NULL) != SQLITE_OK)
+    if (sqlite3_prepare_v2(mail_db, sql, -1, &st, NULL) != SQLITE_OK)
         return -1;
 
-    sqlite3_bind_text(st, 1, sender, -1, SQLITE_STATIC);
-    sqlite3_bind_text(st, 2, receiver, -1, SQLITE_STATIC);
-    sqlite3_bind_int(st, 3, (int)time(NULL));
-    sqlite3_bind_text(st, 4, subject ? subject : "", -1, SQLITE_STATIC);
-    sqlite3_bind_text(st, 5, body, -1, SQLITE_STATIC);
+    sqlite3_bind_text(st, 1, sender,   -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(st, 2, receiver, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(st,  3, (int)time(NULL));
+    sqlite3_bind_text(st, 4, subject ? subject : "", -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(st, 5, body, -1, SQLITE_TRANSIENT);
 
     int rc = sqlite3_step(st);
     sqlite3_finalize(st);
@@ -114,7 +105,11 @@ int mail_send(const char *sender,
 /* ------------------------------------------------------------
    List all mails for a user
 ------------------------------------------------------------ */
-int mail_list(Session *s, const char *user) {
+int mail_list(Session *s, const char *user)
+{
+    if (!mail_db)
+        return -3;
+
     const char *sql =
         "SELECT id, sender, timestamp, flags FROM mail "
         "WHERE receiver = ? "
@@ -124,9 +119,9 @@ int mail_list(Session *s, const char *user) {
     if (sqlite3_prepare_v2(mail_db, sql, -1, &st, NULL) != SQLITE_OK)
         return -1;
 
-    sqlite3_bind_text(st, 1, user, -1, SQLITE_STATIC);
+    sqlite3_bind_text(st, 1, user, -1, SQLITE_TRANSIENT);
 
-    char line[256];
+    char line[512];
     char tsbuf[32];
 
     session_write(s, "Your messages:\r\n");
@@ -137,7 +132,10 @@ int mail_list(Session *s, const char *user) {
         int ts = sqlite3_column_int(st, 2);
         int flags = sqlite3_column_int(st, 3);
 
-        format_timestamp(ts, tsbuf, sizeof(tsbuf), config.mail_ampm);
+        if (!sender)
+            sender = "(unknown)";
+
+        format_timestamp(ts, tsbuf, sizeof(tsbuf));
 
         snprintf(line, sizeof(line),
             "[%d] %s from %s (%s)\r\n",
@@ -153,7 +151,11 @@ int mail_list(Session *s, const char *user) {
 /* ------------------------------------------------------------
    Read a mail
 ------------------------------------------------------------ */
-int mail_read(Session *s, int id) {
+int mail_read(Session *s, int id)
+{
+    if (!mail_db)
+        return -3;
+
     const char *sql =
         "SELECT sender, timestamp, subject, body FROM mail WHERE id = ?;";
 
@@ -169,15 +171,19 @@ int mail_read(Session *s, int id) {
         return -2;
     }
 
-    const char *sender = (const char*)sqlite3_column_text(st, 0);
-    int ts = sqlite3_column_int(st, 1);
+    const char *sender  = (const char*)sqlite3_column_text(st, 0);
+    int ts              = sqlite3_column_int(st, 1);
     const char *subject = (const char*)sqlite3_column_text(st, 2);
-    const char *body = (const char*)sqlite3_column_text(st, 3);
+    const char *body    = (const char*)sqlite3_column_text(st, 3);
 
-    char header[256];
+    if (!sender)  sender  = "(unknown)";
+    if (!subject) subject = "";
+    if (!body)    body    = "";
+
+    char header[512];
     char tsbuf[32];
 
-    format_timestamp(ts, tsbuf, sizeof(tsbuf), config.mail_ampm);
+    format_timestamp(ts, tsbuf, sizeof(tsbuf));
 
     snprintf(header, sizeof(header),
         "From: %s\r\nDate: %s\r\nSubject: %s\r\n\r\n",
@@ -190,9 +196,15 @@ int mail_read(Session *s, int id) {
 
     sqlite3_finalize(st);
 
-    sqlite3_exec(mail_db,
-        "UPDATE mail SET flags = 1 WHERE id = ?;",
-        NULL, NULL, NULL);
+    /* mark as read */
+    const char *usql = "UPDATE mail SET flags = 1 WHERE id = ?;";
+    sqlite3_stmt *ust;
+
+    if (sqlite3_prepare_v2(mail_db, usql, -1, &ust, NULL) == SQLITE_OK) {
+        sqlite3_bind_int(ust, 1, id);
+        sqlite3_step(ust);
+        sqlite3_finalize(ust);
+    }
 
     return 0;
 }
@@ -200,22 +212,40 @@ int mail_read(Session *s, int id) {
 /* ------------------------------------------------------------
    Delete mail
 ------------------------------------------------------------ */
-int mail_delete(Session *s, int id) {
-    char sql[64];
-    snprintf(sql, sizeof(sql),
-        "DELETE FROM mail WHERE id = %d;", id);
+int mail_delete(Session *s, int id)
+{
+    if (!mail_db)
+        return -3;
 
-    sqlite3_exec(mail_db, sql, NULL, NULL, NULL);
+    const char *sql = "DELETE FROM mail WHERE id = ?;";
+    sqlite3_stmt *st;
+
+    if (sqlite3_prepare_v2(mail_db, sql, -1, &st, NULL) != SQLITE_OK) {
+        session_write(s, "Delete failed.\r\n");
+        return -1;
+    }
+
+    sqlite3_bind_int(st, 1, id);
+
+    int rc = sqlite3_step(st);
+    sqlite3_finalize(st);
+
+    if (rc != SQLITE_DONE) {
+        session_write(s, "Delete failed.\r\n");
+        return -2;
+    }
+
     session_write(s, "Message deleted.\r\n");
     return 0;
 }
 
 /* ------------------------------------------------------------
-   Session UI: start mail input
+   Session UI: mail buffer
 ------------------------------------------------------------ */
 #define MAIL_BUFFER_SIZE 4096
 
-static void ensure_mail_buffer(Session *s) {
+static void ensure_mail_buffer(Session *s)
+{
     if (!s->mail_buffer) {
         s->mail_buffer = malloc(MAIL_BUFFER_SIZE);
         if (s->mail_buffer)
@@ -223,8 +253,15 @@ static void ensure_mail_buffer(Session *s) {
     }
 }
 
-void mailbox_start(Session *s) {
+/* ------------------------------------------------------------
+   Session UI: start mail input
+------------------------------------------------------------ */
+void mailbox_start(Session *s)
+{
     ensure_mail_buffer(s);
+    if (!s->mail_buffer)
+        return;
+
     s->mode = SESSION_MODE_MAIL;
     s->mail_buffer[0] = 0;
 
@@ -236,7 +273,8 @@ void mailbox_start(Session *s) {
 /* ------------------------------------------------------------
    Session UI: process each line
 ------------------------------------------------------------ */
-void mailbox_process_line(Session *s, const char *line) {
+void mailbox_process_line(Session *s, const char *line)
+{
     if (strcmp(line, ".") == 0) {
         mailbox_store(s);
         session_write(s, "Message sent.\r\n\r\n");
@@ -245,20 +283,26 @@ void mailbox_process_line(Session *s, const char *line) {
     }
 
     ensure_mail_buffer(s);
+    if (!s->mail_buffer)
+        return;
+
     size_t used = strlen(s->mail_buffer);
     size_t free = MAIL_BUFFER_SIZE - used - 2;
 
-    if (free > 0) {
-        strncat(s->mail_buffer, line, free);
-        strcat(s->mail_buffer, "\n");
-    }
+    if (free < 2)
+        return;
+
+    strncat(s->mail_buffer, line, free - 1);
+    strcat(s->mail_buffer, "\n");
 }
 
 /* ------------------------------------------------------------
    Session UI: store mail via SQLite
 ------------------------------------------------------------ */
-void mailbox_store(Session *s) {
-    if (!s || !s->mail_buffer) return;
+void mailbox_store(Session *s)
+{
+    if (!s || !s->mail_buffer)
+        return;
 
     const char *receiver =
         (s->mail_target[0] ? s->mail_target : "admin");
@@ -271,5 +315,4 @@ void mailbox_store(Session *s) {
     );
 
     s->mail_buffer[0] = 0;
-    s->mail_target[0] = 0;
 }

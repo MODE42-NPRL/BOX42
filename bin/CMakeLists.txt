@@ -1,30 +1,31 @@
 cmake_minimum_required(VERSION 3.10)
-
 project(BOX42 C)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# ------------------------------------------------------------
-# BOX42 Core
-# ------------------------------------------------------------
-set(BOX42_SRC
-    ${CMAKE_SOURCE_DIR}/../src/core/box42_init.c
-    ${CMAKE_SOURCE_DIR}/../src/core/box42.c
-    ${CMAKE_SOURCE_DIR}/../src/core/box42_strds.c
-    ${CMAKE_SOURCE_DIR}/../src/core/session.c
-    ${CMAKE_SOURCE_DIR}/../src/core/mail.c
-    ${CMAKE_SOURCE_DIR}/../src/core/config.c
-    ${CMAKE_SOURCE_DIR}/../src/core/sha256.c
-    ${CMAKE_SOURCE_DIR}/../src/core/hystack.c
-    ${CMAKE_SOURCE_DIR}/../src/core/main.c
+find_package(SQLite3 REQUIRED)
+
+# WICHTIG: von BOX42/bin/ eine Ebene hoch
+include_directories(
+    ../src
+    ../src/core
 )
 
-add_executable(box42
-    ${BOX42_SRC}
+add_executable(BOX42
+    ../src/core/main.c
+    ../src/core/box42.c
+    ../src/core/box42_init.c
+    ../src/core/box42_os.c
+    ../src/core/box42_strds.c
+    ../src/core/config.c
+    ../src/core/session.c
+    ../src/core/mail.c
+    ../src/core/sha256.c
+    ../src/core/hystack.c
+    ../src/core/ax25.c
+    ../src/core/ax25_drv.c
 )
 
-if(UNIX)
-    target_link_libraries(box42 PRIVATE m pthread)
-endif()
+target_link_libraries(BOX42
+    SQLite::SQLite3
+)

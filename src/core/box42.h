@@ -4,6 +4,8 @@
 #define MAX_COMMANDS 128
 #define MAX_STR 256
 
+void box42_cmd_dispatch(Session *s, const char *line);
+
 // ------------------------------------------------------------
 // Command Structure
 // ------------------------------------------------------------

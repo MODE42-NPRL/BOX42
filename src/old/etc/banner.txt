@@ -1,4 +1,0 @@
-Welcome to BOX/42
-Minimal AX.25 Node Engine
-Non-commercial use only
-

@@ -1,0 +1,129 @@
+[Owner]
+[Command #tnc]
+syntax = #tnc
+help = Access TNC/Packet Radio functions.
+
+[Admins]
+
+[Mods]
+
+[Users]
+
+# ------------------------------------------------------------
+# CORE SYSTEM COMMANDS
+# ------------------------------------------------------------
+
+[Command #ESC]
+syntax = #ESC
+help = Exit the current session immediately.
+
+[Command #help]
+syntax = #help
+help = Show all available commands.
+
+[Command #help <command>]
+syntax = #help <command>
+help = Shows all available informations to a command.
+
+[Command #version]
+syntax = #version
+help = Display BOX/42 version information.
+
+[Command #uptime]
+syntax = #uptime
+help = Show system uptime.
+
+[Command #stats]
+syntax = #stats
+help = Display system statistics.
+
+[Command #who]
+syntax = #who
+help = List all currently logged-in users.
+
+[Command #whoami]
+syntax = #whoami
+help = Display your current user identity.
+
+# ------------------------------------------------------------
+# CHAT / CHANNEL SYSTEM
+# ------------------------------------------------------------
+
+[Command #users]
+syntax = #users
+help = List all users in the current chat channel.
+
+[Command #channels]
+syntax = #channels
+help = List all available chat channels.
+
+[Command #join <channel>]
+syntax = #join <channel>
+help = Join a chat channel.
+
+[Command #leave]
+syntax = #leave
+help = Leave the current chat channel.
+
+[Command #chat]
+syntax = #chat
+help = Enter global chat mode.
+
+[Command #msg <user> <text>]
+syntax = #msg <user> <text>
+help = Send a direct message to another user.
+
+# ------------------------------------------------------------
+# MAIL SYSTEM (SQLite backend)
+# ------------------------------------------------------------
+
+[Command #mail]
+syntax = #mail
+help = List all your messages.
+
+[Command #mail list]
+syntax = #mail list
+help = List all your messages.
+
+[Command #mail read <id>]
+syntax = #mail read <id>
+help = Read a message by its ID.
+
+[Command #mail del <id>]
+syntax = #mail del <id>
+help = Delete a message by its ID.
+
+[Command #mail write <user>]
+syntax = #mail write <user>
+help = Write a message to a user.
+
+# Guest restriction:
+# Guests may only use: #mail write admin
+
+# ------------------------------------------------------------
+# SYSTEM INFORMATION
+# ------------------------------------------------------------
+
+[Command #motd]
+syntax = #motd
+help = Show the message of the day.
+
+[Command #news]
+syntax = #news
+help = Display system news.
+
+# ------------------------------------------------------------
+# MISC
+# ------------------------------------------------------------
+
+[Command #clear]
+syntax = #clear
+help = Clear the screen.
+
+[Command #quit]
+syntax = #quit
+help = Exit the current session.
+
+[Command #files]
+syntax = #files
+help = Open the file base (upload/download).

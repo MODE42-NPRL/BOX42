@@ -3,50 +3,57 @@
 #ifndef BOX42_STRDS_H
 #define BOX42_STRDS_H
 
-// ------------------------------------------------------------
-// HSTB42 – Hybrid Stack BOX42 (Herz, Motor, Gehirn) v1.0 (frozen)
-// ------------------------------------------------------------
+#include <stdint.h>
+#include <string.h>
 
-// Hybrid-Stack Layer Identifiers
+#include "ax25.h"
+#include "box42_strds.h"
+#include "session.h"
+#include <sqlite3.h>
+
+/* ------------------------------------------------------------
+   AX.25 Driver callback types
+------------------------------------------------------------ */
+typedef void (*ax25_rx_callback_t)(const AX25_Frame *f, int port);
+typedef void (*ax25_tx_raw_callback_t)(const uint8_t *buf, int len, int port);
+
+/* ------------------------------------------------------------
+   HSTB42 – Hybrid Stack BOX42
+------------------------------------------------------------ */
+
 typedef enum {
-    HSTB42_LAYER_RF = 0,        // AX.25 RF Layer
-    HSTB42_LAYER_SERIAL = 1,    // KISS/TNC2C Serial Layer
-    HSTB42_LAYER_HYBRID = 2,    // Hybrid Conversion Layer
-    HSTB42_LAYER_TCPIP = 3,     // TCP/IP Session Layer
-    HSTB42_LAYER_BOX42 = 4      // BOX42 Node/BBS/User Layer
+    HSTB42_LAYER_RF = 0,
+    HSTB42_LAYER_SERIAL = 1,
+    HSTB42_LAYER_HYBRID = 2,
+    HSTB42_LAYER_TCPIP = 3,
+    HSTB42_LAYER_BOX42 = 4
 } HSTB42_LAYER;
 
-// Hybrid-Stack Direction (100% dual)
 typedef enum {
-    HSTB42_DIR_RX = 0,          // Empfangspfad
-    HSTB42_DIR_TX = 1           // Sendepfad
+    HSTB42_DIR_RX = 0,
+    HSTB42_DIR_TX = 1
 } HSTB42_DIRECTION;
 
-// Hybrid-Stack Container (readonly, no logic)
 typedef struct {
-    int active;                 // 1 = aktiv, 0 = inaktiv
-    HSTB42_LAYER from_layer;    // Eingangsschicht
-    HSTB42_LAYER to_layer;      // Ausgangsschicht
-    HSTB42_DIRECTION direction; // RX oder TX
+    int active;
+    HSTB42_LAYER from_layer;
+    HSTB42_LAYER to_layer;
+    HSTB42_DIRECTION direction;
 } HSTB42_UNIT;
 
-// Hybrid-Stack System (HSTB42)
 typedef struct {
-    HSTB42_UNIT rx_path;        // Empfangspfad
-    HSTB42_UNIT tx_path;        // Sendepfad
+    HSTB42_UNIT rx_path;
+    HSTB42_UNIT tx_path;
 } HSTB42_SYSTEM;
 
-// Globale Hybrid-Stack-Konstante
 extern const HSTB42_SYSTEM BOX42_HSTB42;
 
+/* ------------------------------------------------------------
+   STRDS Limits
+------------------------------------------------------------ */
 
-// ------------------------------------------------------------
-// BOX42 Standard Definitions (STRDS) v1.2 (frozen)
-// ------------------------------------------------------------
-
-// Systemweite Limits (Hardcode-Defaults)
 #define BOX42_MAX_USERS         32
-#define BOX42_MAX_CHANNELS      20
+#define BOX42_MAX_CHANNELS      32
 #define BOX42_MAX_NODES         32
 #define BOX42_MAX_CALLSIGN_LEN  12
 #define BOX42_MAX_NAME_LEN      24
@@ -54,7 +61,6 @@ extern const HSTB42_SYSTEM BOX42_HSTB42;
 #define BOX42_MAX_MSG_LEN       512
 #define BOX42_MAX_PATH_LEN      128
 
-// Rollen
 typedef enum {
     ROLE_OWNER   = 0,
     ROLE_ADMINS  = 1,
@@ -63,7 +69,6 @@ typedef enum {
     ROLE_GUESTS  = 5
 } BOX42_ROLE;
 
-// Node-Typen
 typedef enum {
     NODE_TERM       = 0,
     NODE_TELNET4    = 1,
@@ -71,7 +76,6 @@ typedef enum {
     NODE_TELNETAX25 = 3
 } BOX42_NODE_TYPE;
 
-// User-Datensatz
 typedef struct {
     char name[BOX42_MAX_NAME_LEN];
     char callsign[BOX42_MAX_CALLSIGN_LEN];
@@ -80,46 +84,76 @@ typedef struct {
     int active;
 } BOX42_USER;
 
-// Node-Datensatz
 typedef struct {
     BOX42_NODE_TYPE type;
     char path[BOX42_MAX_PATH_LEN];
     int active;
 } BOX42_NODE;
 
-// Channel-Datensatz
 typedef struct {
     char name[BOX42_MAX_NAME_LEN];
     int in_use;
 } BOX42_CHANNEL;
 
-// System-Standardwerte (readonly)
 typedef struct {
     int max_users;
     int max_channels;
     int max_nodes;
 } BOX42_STRDS_LIMITS;
 
-// Globale Limits
 extern const BOX42_STRDS_LIMITS BOX42_LIMITS;
 
+/* ------------------------------------------------------------
+   STRDS Core
+------------------------------------------------------------ */
 
-// ------------------------------------------------------------
-// STRDS Prompt / Command System v0.1.2 (hardened, non-violent)
-// ------------------------------------------------------------
-
-struct HSTB42_SESSION;
-
-// Initialisiert STRDS (Prompt etc.)
 void strds_init(void);
-
-// Zeigt Prompt nur im COMMAND-Mode
-void strds_prompt(struct HSTB42_SESSION *s);
-
-// Verarbeitet eine einzelne Eingabezeile
-void strds_process(struct HSTB42_SESSION *s, const char *line);
-
-// Startet eine STRDS-Session auf einem TCP-FD (von HYSTACK aufgerufen)
 void strds_session_start(int fd);
 
-#endif
+/* ------------------------------------------------------------
+   Terminal Environment Detection
+------------------------------------------------------------ */
+
+int box42_strds_is_tmux(void);
+int box42_strds_is_screen(void);
+
+/* ------------------------------------------------------------
+   UNIVERSAL TELNET / TERMINAL INPUT NORMALIZER
+------------------------------------------------------------ */
+
+int strds_normalize_input(uint8_t *buf, int len, char *out, int outsz);
+
+/* ------------------------------------------------------------
+   AX.25 ↔ STRDS Session Bridge
+------------------------------------------------------------ */
+
+void strds_ax25_input(const char *callsign, const uint8_t *data, int len);
+void strds_ax25_output(Session *s, const char *text);
+Session *strds_ax25_get_or_create(const char *callsign);
+
+/* ------------------------------------------------------------
+   Low-level write helper
+------------------------------------------------------------ */
+
+void strds_write(int fd, const char *text);
+
+/* ------------------------------------------------------------
+   AX.25 Driver API (merged into STRDS)
+------------------------------------------------------------ */
+
+void ax25_drv_init(
+    ax25_rx_callback_t rx_cb,
+    ax25_tx_raw_callback_t kiss_tx_cb,
+    ax25_tx_raw_callback_t hdlc_tx_cb
+);
+
+void ax25_drv_kiss_rx_byte(uint8_t b, int port);
+void ax25_drv_hdlc_rx_byte(uint8_t b, int port);
+
+void ax25_drv_kiss_send(const AX25_Frame *f, int port);
+void ax25_drv_hdlc_send(const AX25_Frame *f, int port);
+
+void box42_sqlite_init(const char *path);
+sqlite3 *box42_db(void);
+
+#endif /* BOX42_STRDS_H */

@@ -7,23 +7,31 @@
 
 struct AX25_Frame;
 
+/* Session Modes */
 #define SESSION_MODE_COMMAND 0
 #define SESSION_MODE_MAIL    1
+#define SESSION_MODE_ADMIN   2
+#define SESSION_MODE_CHAT    3
+#define SESSION_MODE_SILENT  4
+#define SESSION_MODE_RAW     5
 
-typedef struct Session {
+typedef struct {
     int fd;
     char username[32];
     int level;
-    int use_up42;
-
-    int ax25_bind;
-    int ax25_echo;
 
     int active;
     int mode;
 
-    /* Mail buffer pointer */
-    char *mail_buffer;
+    int ax25_bind;
+    int ax25_echo;
+
+    int use_up42;
+
+    /* Mail-System */
+    char *mail_buffer;      /* dynamischer Textpuffer */
+    char mail_target[32];   /* Empfänger */
+
 } Session;
 
 /* Core API */
@@ -47,5 +55,7 @@ void session_router_ax25_in(const struct AX25_Frame *f, const uint8_t *raw, int 
 void session_send(Session *s, const uint8_t *buf, int len);
 void session_write(Session *s, const char *text);
 
-#endif
+/* Mode setter */
+void session_set_mode(Session *s, int mode);
 
+#endif

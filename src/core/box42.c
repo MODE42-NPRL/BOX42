@@ -4,6 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "session.h"
+
+void box42_cmd_dispatch(Session *s, const char *line)
+{
+    (void)s;
+    (void)line;
+    /* TODO: echte Command-Dispatch-Logik implementieren */
+}
 
 // ------------------------------------------------------------
 // HSTB42 System Definition
