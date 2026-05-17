@@ -1,3 +1,0 @@
-/home/akb/Downloads/BOX42/github/BOX42/bin/build/CMakeFiles/BOX42.dir
-/home/akb/Downloads/BOX42/github/BOX42/bin/build/CMakeFiles/edit_cache.dir
-/home/akb/Downloads/BOX42/github/BOX42/bin/build/CMakeFiles/rebuild_cache.dir
