@@ -1,3 +1,5 @@
+/* src/core/box42_strds.h */
+
 #ifndef BOX42_STRDS_H
 #define BOX42_STRDS_H
 
@@ -101,5 +103,23 @@ typedef struct {
 // Globale Limits
 extern const BOX42_STRDS_LIMITS BOX42_LIMITS;
 
-#endif
 
+// ------------------------------------------------------------
+// STRDS Prompt / Command System v0.1.2 (hardened, non-violent)
+// ------------------------------------------------------------
+
+struct HSTB42_SESSION;
+
+// Initialisiert STRDS (Prompt etc.)
+void strds_init(void);
+
+// Zeigt Prompt nur im COMMAND-Mode
+void strds_prompt(struct HSTB42_SESSION *s);
+
+// Verarbeitet eine einzelne Eingabezeile
+void strds_process(struct HSTB42_SESSION *s, const char *line);
+
+// Startet eine STRDS-Session auf einem TCP-FD (von HYSTACK aufgerufen)
+void strds_session_start(int fd);
+
+#endif

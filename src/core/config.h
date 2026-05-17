@@ -1,3 +1,5 @@
+/* src/core/config.h */
+
 #ifndef BOX42_CONFIG_H
 #define BOX42_CONFIG_H
 

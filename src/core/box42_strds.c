@@ -1,41 +1,93 @@
-#include "box42_strds.h"
+#include <string.h>
+#include <unistd.h>
 
-// ------------------------------------------------------------
-// HSTB42 – Hybrid Stack BOX42 (Herz, Motor, Gehirn)
-// ------------------------------------------------------------
+#include "session.h"
+#include "mail.h"
 
-const HSTB42_SYSTEM BOX42_HSTB42 = {
-    .rx_path = {
-        .active = 1,
-        .from_layer = HSTB42_LAYER_RF,
-        .to_layer = HSTB42_LAYER_BOX42,
-        .direction = HSTB42_DIR_RX
-    },
-    .tx_path = {
-        .active = 1,
-        .from_layer = HSTB42_LAYER_BOX42,
-        .to_layer = HSTB42_LAYER_RF,
-        .direction = HSTB42_DIR_TX
+void strds_init(void) {
+    /* nothing needed yet */
+}
+
+static const char *prompt_symbol = "> ";
+
+/* ------------------------------------------------------------
+   Prompt
+------------------------------------------------------------ */
+static void strds_prompt(Session *s) {
+    if (!s) return;
+
+    if (s->mode == SESSION_MODE_COMMAND) {
+        session_write(s, prompt_symbol);
     }
-};
+}
 
-// ------------------------------------------------------------
-// BOX42 Standard Definitions (STRDS) v1.2
-// ------------------------------------------------------------
+/* ------------------------------------------------------------
+   Line processing
+------------------------------------------------------------ */
+static void strds_process(Session *s, const char *line) {
+    if (!s || !line) return;
 
-const BOX42_STRDS_LIMITS BOX42_LIMITS = {
-    .max_users    = BOX42_MAX_USERS,
-    .max_channels = BOX42_MAX_CHANNELS,
-    .max_nodes    = BOX42_MAX_NODES
-};
-#include "box42_strds.h"
+    if (strcmp(line, "#ESC") == 0) {
+        s->active = 0;      /* Session sauber beenden */
+        return;
+    }
 
-// ------------------------------------------------------------
-// BOX42 Standard Definitions (STRDS) v1.0
-// ------------------------------------------------------------
+    /* Mail mode: delegate to mailbox */
+    if (s->mode == SESSION_MODE_MAIL) {
+        mailbox_process_line(s, line);
+        return;
+    }
 
-const BOX42_STRDS_LIMITS BOX42_LIMITS = {
-    .max_users    = BOX42_MAX_USERS,
-    .max_channels = BOX42_MAX_CHANNELS,
-    .max_nodes    = BOX42_MAX_NODES
-};
+    /* Command mode */
+    if (strcmp(line, "mail") == 0) {
+        s->mode = SESSION_MODE_MAIL;
+        mailbox_start(s);
+        return;
+    }
+
+    if (strcmp(line, "quit") == 0) {
+        s->active = 0;
+        return;
+    }
+
+    /* Default: echo */
+    session_write(s, "You said: ");
+    session_write(s, line);
+    session_write(s, "\n");
+}
+
+/* ------------------------------------------------------------
+   Session start
+------------------------------------------------------------ */
+void strds_session_start(int fd) {
+    Session *s = session_create(fd, "guest", 0);
+    if (!s) return;
+
+    s->mode   = SESSION_MODE_COMMAND;
+    s->active = 1;
+
+    strds_prompt(s);
+
+    char buf[512];
+    int n;
+    while (s->active) {
+        n = read(fd, buf, sizeof(buf)-1);
+        if (n <= 0) {
+            s->active = 0;
+            break;
+        }
+
+        buf[n] = '\0';
+
+        /* primitive line split: assume one line per read */
+        char *p = strchr(buf, '\n');
+        if (p) *p = '\0';
+
+        strds_process(s, buf);
+
+        if (s->active)
+            strds_prompt(s);
+    }
+
+    session_destroy(fd);
+}

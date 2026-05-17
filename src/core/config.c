@@ -1,8 +1,10 @@
-#include <stdlib.h>
+/* src/core/config.c */
+
 #include "config.h"
+
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <ctype.h>
 
 BOX42_Config g_cfg;
 
@@ -32,7 +34,7 @@ static void cfg_defaults(void) {
 }
 
 static void trim(char *s) {
-    int n = strlen(s);
+    int n = (int)strlen(s);
     while (n > 0 && (s[n-1] == '\n' || s[n-1] == '\r'))
         s[--n] = 0;
 }
@@ -126,4 +128,5 @@ int config_load(const char *path) {
 }
 
 void config_apply(void) {
+    /* aktuell: keine dynamische Anwendung nötig */
 }

@@ -3,18 +3,11 @@
 
 #include "session.h"
 
-/*
- * Minimal Mail-API für BOX42.
- * command.c erwartet diese Funktionen.
- */
+/* Simple mailbox interface bound to a Session */
 
-/* Schreibe eine Mail an einen Benutzer */
-void mail_send(Session *from, const char *to, const char *msg);
-
-/* Liste Mails für einen Benutzer */
-void mail_list(Session *s);
-
-/* Zeige eine einzelne Mail */
-void mail_read(Session *s, int id);
+void mailbox_start(Session *s);
+void mailbox_process_line(Session *s, const char *line);
+void mailbox_store(Session *s);
 
 #endif
+
