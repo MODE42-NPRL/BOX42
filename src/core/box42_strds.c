@@ -1,9 +1,13 @@
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "session.h"
 #include "mail.h"
 
+/* ------------------------------------------------------------
+   Init
+------------------------------------------------------------ */
 void strds_init(void) {
     /* nothing needed yet */
 }
@@ -22,35 +26,117 @@ static void strds_prompt(Session *s) {
 }
 
 /* ------------------------------------------------------------
+   MAIL COMMANDS (SQLite backend)
+------------------------------------------------------------ */
+static void strds_mail(Session *s, const char *args)
+{
+    /* --------------------------------------------------------
+       GUEST RESTRICTIONS
+    -------------------------------------------------------- */
+    if (s->role == 0) {  /* guest */
+        /* guest darf nur: #mail write admin */
+        if (strncmp(args, "write ", 6) == 0) {
+            const char *target = args + 6;
+
+            if (strcmp(target, "admin") != 0) {
+                session_write(s, "Guests may only write mail to admin.\r\n");
+                return;
+            }
+
+            strncpy(s->mail_target, "admin", sizeof(s->mail_target)-1);
+            s->mail_target[sizeof(s->mail_target)-1] = 0;
+
+            mailbox_start(s);
+            return;
+        }
+
+        session_write(s,
+            "Guest permissions:\r\n"
+            "  #mail write admin\r\n"
+        );
+        return;
+    }
+
+    /* --------------------------------------------------------
+       NORMAL USERS AND HIGHER
+    -------------------------------------------------------- */
+
+    /* no args → list */
+    if (!args || strlen(args) == 0 || strcmp(args, "list") == 0) {
+        mail_list(s, s->username);
+        return;
+    }
+
+    /* read */
+    if (strncmp(args, "read ", 5) == 0) {
+        int id = atoi(args + 5);
+        mail_read(s, id);
+        return;
+    }
+
+    /* delete */
+    if (strncmp(args, "del ", 4) == 0) {
+        int id = atoi(args + 4);
+        mail_delete(s, id);
+        return;
+    }
+
+    /* write */
+    if (strncmp(args, "write ", 6) == 0) {
+        const char *target = args + 6;
+
+        strncpy(s->mail_target, target, sizeof(s->mail_target)-1);
+        s->mail_target[sizeof(s->mail_target)-1] = 0;
+
+        mailbox_start(s);
+        return;
+    }
+
+    /* fallback */
+    session_write(s,
+        "Usage:\r\n"
+        "  #mail list\r\n"
+        "  #mail read <id>\r\n"
+        "  #mail del <id>\r\n"
+        "  #mail write <user>\r\n"
+    );
+}
+
+/* ------------------------------------------------------------
    Line processing
 ------------------------------------------------------------ */
 static void strds_process(Session *s, const char *line) {
     if (!s || !line) return;
 
+    /* ESC → Session beenden */
     if (strcmp(line, "#ESC") == 0) {
-        s->active = 0;      /* Session sauber beenden */
+        s->active = 0;
         return;
     }
 
-    /* Mail mode: delegate to mailbox */
+    /* MAIL MODE */
     if (s->mode == SESSION_MODE_MAIL) {
         mailbox_process_line(s, line);
         return;
     }
 
-    /* Command mode */
-    if (strcmp(line, "mail") == 0) {
-        s->mode = SESSION_MODE_MAIL;
-        mailbox_start(s);
+    /* COMMAND MODE */
+
+    /* MAIL COMMANDS */
+    if (strncmp(line, "#mail", 5) == 0) {
+        const char *args = line + 5;
+        while (*args == ' ') args++;
+        strds_mail(s, args);
         return;
     }
 
-    if (strcmp(line, "quit") == 0) {
+    /* QUIT */
+    if (strcmp(line, "#quit") == 0) {
         s->active = 0;
         return;
     }
 
-    /* Default: echo */
+    /* DEFAULT: echo */
     session_write(s, "You said: ");
     session_write(s, line);
     session_write(s, "\n");
@@ -79,7 +165,7 @@ void strds_session_start(int fd) {
 
         buf[n] = '\0';
 
-        /* primitive line split: assume one line per read */
+        /* primitive line split */
         char *p = strchr(buf, '\n');
         if (p) *p = '\0';
 

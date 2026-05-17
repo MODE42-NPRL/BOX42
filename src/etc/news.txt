@@ -1,0 +1,6 @@
+[News#1]
+News 1 Text
+[News#2]
+News 2 Text
+[MOTD]
+MOTD Text.
